@@ -1,0 +1,76 @@
+#+title: Quote Reminder
+#+author: Yves Biener
+#+email: yves.biener@gmx.de
+#+options: toc:nil
+#+toc: headlines 5
+
+* What is this project about?
+
+Quote reminder is a tool which allows me to remind myself about all my book
+quotes I highlight. It stores the quotes in a database and can send reminder
+(e.g. daily, weekly, etc.) per mail for a specified number of quotes. They can
+be choosen at random or by defined rules, like they are all from one topic or
+all from different topics.
+
+* Where do the quotes come from?
+
+Depending on the source of the quotes there are different ways to add quotes to
+the database. The goal should be to combine the appending of quotes into a
+single universal process regardless of the source of the quote.
+
+** Kindle
+
+Kindle notes can be uploaded by using the export notes functionality of the
+kindle-device. There seems to be no way to do this on the online version. Also
+following questions remain unclear:
++ What about books that I didn't bought via amazon (e.g. downloaded via
+  Humble-bundle, etc.)?
++ Will all quotes be exported even if they were not all done on one device (e.g.
+  tablet, pc and kindle)?
++ Does this also apply to non-amazon books (synching across multiple devices)?
+
+** Printed Books
+
+Quotes from printed books can also be stored. They need to be added individually
+or batched in a table form (e.g. as cv file, etc.) which then can be uploaded.
+
+** Non-Kindle format Books
+
+I also have Books that are not in the kindle-format (.mobi). For these books use
+a similar approach as for [[Printed Books]].
+
+* What does the database store?
+
+The database stores various information along the quote itself. The database
+should be a relational database. It stores three tables for ~Quote~'s, ~Book~'s
+and ~Author~'s in the following way:
+
++ Quote
+  + ID (PK auto-increment)
+  + Book-ID (FK)
+  + Value (not null, not empty)
+  + Page (not null, not empty)
+  + Time of creation (auto-create?)
+
++ Book
+  + ID (PK auto-increment)
+  + Author-ID (FK) [1 to N]
+  + Topic-ID (FK) [1 to N]
+  + Language (optional)
+  + Title (not null, not empty)
+  + ISBN (unique)
+  + Date of publication (optional)
+
++ Author
+  + ID (PK auto-increment)
+  + Name (not null, not empty)
+  + Surname (optional)
+
+* Interacting with the service
+
+This service implements a RESTful interface to allow to add quotes, get the
+stored quotes, order, filter them to the user's request. This project does not
+implement a front-end representation. Using the http operations like =GET=,
+=POST=, =PUT=, =UPDATE= the changes to the database will be applied or results
+from the database will be returned.
+
