@@ -66,6 +66,10 @@ and ~Author~'s in the following way:
   + Name (not null, not empty)
   + Surname (optional)
 
++ Topic
+  + ID (PK auto-increment)
+  + Value (not null, not empty)
+
 * Interacting with the service
 
 This service implements a RESTful interface to allow to add quotes, get the
