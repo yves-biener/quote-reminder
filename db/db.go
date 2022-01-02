@@ -2,7 +2,6 @@ package quote
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"time"
 
@@ -45,15 +44,6 @@ type Language struct {
 type database struct {
 	// do I even need this? Or can I just use sql.Stmt?
 	connection *sql.DB
-	// database statements
-	createDatabaseStmt *sql.Stmt
-	useDatabaseStmt    *sql.Stmt
-	// create statements
-	createBookStmt     *sql.Stmt
-	createTopicStmt    *sql.Stmt
-	createAuthorStmt   *sql.Stmt
-	createQuoteStmt    *sql.Stmt
-	createLanguageStmt *sql.Stmt
 	// insert statements
 	insertBookStmt     *sql.Stmt
 	insertTopicStmt    *sql.Stmt
@@ -72,66 +62,52 @@ func Connect(filename string) (db *database) {
 	var err error
 	db = new(database)
 	db.connection, err = sql.Open("sqlite3", filename)
+	defer db.connection.Close()
 	if err != nil {
 		log.Fatalf("Could not open database: '%s' due to '%s'\n", filename, err)
 	}
-	db.Prepare()
 	db.Init()
+	db.Prepare()
 	return
 }
 
-// Prepare Statements
+// create tables
 const (
-	createDatabase = "IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'QuoteDB') BEGIN CREATE DATABASE QuoteDB END"
-	useDatabase    = "USE QuoteDB;"
-)
-
-const (
-	createBook = `IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'Books' and xtype='U')
-BEGIN
-CREATE TABLE Books (
+	createBook = `CREATE TABLE Books (
 Id int IDENTITY(1,1) PRIMARY KEY,
-AuthorId int FOREIGN KEY REFERENCES Authors(Id),
-TopicId int FOREIGN KEY REFERENCES Topics(Id),
+AuthorId int,
+TopicId int,
 ISBN NOT NULL UNIQUE,
 Title varchar NOT NULL,
-LanguageId int FOREIGN KEY REFERENCES Languages(Id),
-ReleaseDate date NOT NULL
-)
-END`
-	createTopic = `IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'Topics' and xtype='U')
-BEGIN
-CREATE TABLE Topics (
+LanguageId int,
+ReleaseDate date NOT NULL,
+FOREIGN KEY (AuthorId) REFERENCES Authors(Id),
+FOREIGN KEY (TopicId) REFERENCES Topics(Id),
+FOREIGN KEY (LanguageId) REFERENCES Languages(Id)
+);`
+	createTopic = `CREATE TABLE Topics (
 Id int IDENTITY(1,1) PRIMARY KEY,
 Topic varchar NOT NULL UNIQUE
-)
-END`
-	createAuthor = `IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'Authors' and xtype='U')
-BEGIN
-CREATE TABLE Authors (
+);`
+	createAuthor = `CREATE TABLE Authors (
 Id int IDENTITY(1,1) PRIMARY KEY,
 Name varchar NOT NULL UNIQUE
-)
-END`
-	createQuote = `IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'Quotes' and xtype='U')
-BEGIN
-CREATE TABLE Quotes (
+);`
+	createQuote = `CREATE TABLE Quotes (
 Id int IDENTITY(1,1) PRIMARY KEY,
-BookId int FOREIGN KEY REFERENCES Books(Id),
+BookId int,
 Quote varchar NOT NULL,
 Page int NOT NULL,
 RecordDate date NOT NULL DEFAULT CURRENT_DATE,
-)
-END`
-	createLanguage = `IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'Languages' and xtype='U')
-BEGIN
-CREATE TABLE Languages (
+FOREIGN KEY (BookId) REFERENCES Books(Id)
+);`
+	createLanguage = `CREATE TABLE Languages (
 Id int IDENTITY(1,1) PRIMARY KEY,
 Language varchar NOT NULL UNIQUE
-)
-END`
+);`
 )
 
+// Prepare Statements
 const (
 	insertBook     = "INSERT INTO Books (AuthorId, TopicId, ISBN, Title, LanguageId, ReleaseDate) VALUES (?, ?, ?, ?, ?, ?);"
 	insertTopic    = "INSERT INTO Topics (Topic) VALUES (?);"
@@ -154,27 +130,19 @@ func checkError(err error) {
 	}
 }
 
+// Initialize the database by creating the tables required for quote.
+func (db *database) Init() {
+	// create tables
+	db.connection.Exec(createTopic)
+	db.connection.Exec(createAuthor)
+	db.connection.Exec(createLanguage)
+	db.connection.Exec(createBook)
+	db.connection.Exec(createQuote)
+}
+
+// Prepare the queries used for the tables created by `Init'.
 func (db *database) Prepare() {
 	var err error
-
-	// database statements
-	db.createDatabaseStmt, err = db.connection.Prepare(createDatabase)
-	checkError(err)
-	db.useDatabaseStmt, err = db.connection.Prepare(useDatabase)
-	checkError(err)
-
-	// create statements
-	db.createTopicStmt, err = db.connection.Prepare(createTopic)
-	checkError(err)
-	db.createAuthorStmt, err = db.connection.Prepare(createAuthor)
-	checkError(err)
-	db.createLanguageStmt, err = db.connection.Prepare(createLanguage)
-	checkError(err)
-	db.createBookStmt, err = db.connection.Prepare(createBook)
-	checkError(err)
-	db.createQuoteStmt, err = db.connection.Prepare(createQuote)
-	checkError(err)
-
 	// insert statements
 	db.insertTopicStmt, err = db.connection.Prepare(insertTopic)
 	checkError(err)
@@ -198,45 +166,4 @@ func (db *database) Prepare() {
 	checkError(err)
 	db.updateQuoteStmt, err = db.connection.Prepare(updateQuote)
 	checkError(err)
-}
-
-func (db *database) Init() {
-	var err error
-	var res sql.Result
-
-	res, err = db.createDatabaseStmt.Exec()
-	fmt.Println(res)
-	checkError(err)
-	// not sure if I should close them after I
-	// don't need the anymore...
-	db.createDatabaseStmt.Close()
-	res, err = db.useDatabaseStmt.Exec()
-	fmt.Println(res)
-	checkError(err)
-	db.useDatabaseStmt.Close()
-
-	res, err = db.createTopicStmt.Exec()
-	fmt.Println(res)
-	checkError(err)
-	db.createTopicStmt.Close()
-
-	res, err = db.createLanguageStmt.Exec()
-	fmt.Println(res)
-	checkError(err)
-	db.createLanguageStmt.Close()
-
-	res, err = db.createAuthorStmt.Exec()
-	fmt.Println(res)
-	checkError(err)
-	db.createAuthorStmt.Close()
-
-	res, err = db.createBookStmt.Exec()
-	fmt.Println(res)
-	checkError(err)
-	db.createBookStmt.Close()
-
-	res, err = db.createQuoteStmt.Exec()
-	fmt.Println(res)
-	checkError(err)
-	db.createQuoteStmt.Close()
 }
