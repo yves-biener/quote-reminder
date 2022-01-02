@@ -45,30 +45,33 @@ The database stores various information along the quote itself. The database
 should be a relational database. It stores three tables for ~Quote~'s, ~Book~'s
 and ~Author~'s in the following way:
 
-+ Quote
-  + ID (PK auto-increment)
-  + Book-ID (FK)
-  + Value (not null, not empty)
++ Quotes
+  + Id (PK auto-increment)
+  + BookId (FK)
+  + Quote (not null, not empty)
   + Page (not null, not empty)
-  + Time of creation (auto-create?)
+  + RecordDate (default: current time)
 
-+ Book
-  + ID (PK auto-increment)
-  + Author-ID (FK) [1 to N]
-  + Topic-ID (FK) [1 to N]
-  + Language (optional)
-  + Title (not null, not empty)
-  + ISBN (unique)
-  + Date of publication (optional)
++ Books
+  + Id (PK auto-increment)
+  + AuthorId (FK)
+  + TopicId (FK)
+  + LanguageId (FK)
+  + Title (not null)
+  + ISBN (not null, unique)
+  + ReleaseDate (not null)
 
-+ Author
++ Authors
   + ID (PK auto-increment)
-  + Name (not null, not empty)
-  + Surname (optional)
+  + Name (not null, unique)
 
-+ Topic
++ Topics
+  + Id (PK auto-increment)
+  + Topic (not null, unique)
+
++ Languages
   + ID (PK auto-increment)
-  + Value (not null, not empty)
+  + Language (not null, unique)
 
 * Interacting with the service
 
