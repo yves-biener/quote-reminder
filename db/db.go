@@ -8,37 +8,95 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+type DAO interface {
+	Commit() (sql.Result, error)
+}
+
 type Quote struct {
-	Id         int
-	BookId     int
-	Value      string
+	id         int
+	Book       Book
+	Quote      string
 	Page       int
 	RecordDate time.Time
+	stmt       *sql.Stmt
+}
+
+func (quote Quote) Commit() (res sql.Result, err error) {
+	if quote.id == 0 { // Insert
+		quote.Book.Commit()
+		res, err = quote.stmt.Exec(quote.Book.id, quote.Quote, quote.Page)
+	} else { // Update
+		res, err = quote.stmt.Exec(quote.Book.id, quote.Quote, quote.Page, quote.id)
+	}
+	return
 }
 
 type Book struct {
-	Id          int
-	AuthorId    int
-	TopicId     int
-	LanguageId  int
+	id          int
+	Author      Author
+	Topic       Topic
 	Title       string
 	ISBN        string
+	Language    Language
 	ReleaseDate time.Time
+	stmt        *sql.Stmt
+}
+
+func (book Book) Commit() (res sql.Result, err error) {
+	if book.id == 0 { // Insert
+		book.Author.Commit()
+		book.Topic.Commit()
+		book.Language.Commit()
+		res, err = book.stmt.Exec(book.Author.id, book.Topic.id, book.Title, book.ISBN, book.Language.id, book.ReleaseDate)
+	} else { // Update
+		res, err = book.stmt.Exec(book.Author.id, book.Topic.id, book.Title, book.ISBN, book.Language.id, book.ReleaseDate, book.id)
+	}
+	return
 }
 
 type Author struct {
-	Id   int
+	id   int
 	Name string
+	stmt *sql.Stmt
+}
+
+func (author Author) Commit() (res sql.Result, err error) {
+	if author.id == 0 { // Insert
+		res, err = author.stmt.Exec(author.Name)
+	} else { // Update
+		res, err = author.stmt.Exec(author.Name, author.id)
+	}
+	return
 }
 
 type Topic struct {
-	Id    int
+	id    int
 	Topic string
+	stmt  *sql.Stmt
+}
+
+func (topic Topic) Commit() (res sql.Result, err error) {
+	if topic.id == 0 { // Insert
+		res, err = topic.stmt.Exec(topic.Topic)
+	} else { // Update
+		res, err = topic.stmt.Exec(topic.Topic, topic.id)
+	}
+	return
 }
 
 type Language struct {
-	Id       int
+	id       int
 	Language string
+	stmt     *sql.Stmt
+}
+
+func (language Language) Commit() (res sql.Result, err error) {
+	if language.id == 0 { // Insert
+		res, err = language.stmt.Exec(language.Language)
+	} else { // Update
+		res, err = language.stmt.Exec(language.Language, language.id)
+	}
+	return
 }
 
 type database struct {
@@ -58,6 +116,9 @@ type database struct {
 	updateLanguageStmt *sql.Stmt
 }
 
+// Connect to an sqlite database located at `filename` This function ensures
+// that the file will be created if it does not exist, create the required
+// tables if it can successfully open the file
 func Connect(filename string) (db *database) {
 	var err error
 	db = new(database)
@@ -95,40 +156,17 @@ Name varchar NOT NULL UNIQUE
 );`
 	createQuote = `CREATE TABLE Quotes (
 Id int IDENTITY(1,1) PRIMARY KEY,
-BookId int,
+BbookId int,
 Quote varchar NOT NULL,
 Page int NOT NULL,
 RecordDate date NOT NULL DEFAULT CURRENT_DATE,
-FOREIGN KEY (BookId) REFERENCES Books(Id)
+FOREIGN KEY (BbookId) REFERENCES Books(Id)
 );`
 	createLanguage = `CREATE TABLE Languages (
 Id int IDENTITY(1,1) PRIMARY KEY,
 Language varchar NOT NULL UNIQUE
 );`
 )
-
-// Prepare Statements
-const (
-	insertBook     = "INSERT INTO Books (AuthorId, TopicId, ISBN, Title, LanguageId, ReleaseDate) VALUES (?, ?, ?, ?, ?, ?);"
-	insertTopic    = "INSERT INTO Topics (Topic) VALUES (?);"
-	insertAuthor   = "INSERT INTO Authors (Name) VALUES (?);"
-	insertQuote    = "INSERT INTO Quotes (BookId, Quote, Page) VALUES (?, ?, ?);"
-	insertLanguage = "INSERT INTO Languages (Language) VALUES (?);"
-)
-
-const (
-	updateBook     = "UPDATE Books SET AuthorId = ?, TopicId = ?, ISBN = ?, Title = ?, LanguageId = ?, ReleaseDate = ? WHERE Id = ?;"
-	updateTopic    = "UPDATE Topics SET Topic = ? WHERE Id = ?;"
-	updateAuthor   = "UPDATE Authors SET NAME = ? WHERE Id = ?;"
-	updateQuote    = "UPDATE Quotes SET Quote = ?, Page = ? WHERE Id = ?;"
-	updateLanguage = "UPDATE Languages SET Language = ? WHERE Id = ?;"
-)
-
-func checkError(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
 
 // Initialize the database by creating the tables required for quote.
 func (db *database) Init() {
@@ -138,6 +176,29 @@ func (db *database) Init() {
 	db.connection.Exec(createLanguage)
 	db.connection.Exec(createBook)
 	db.connection.Exec(createQuote)
+}
+
+// Prepare Statements
+const (
+	insertBook     = "INSERT INTO Books (AuthorId, TopicId, ISBN, Title, LanguageId, ReleaseDate) VALUES (?, ?, ?, ?, ?, ?);"
+	insertTopic    = "INSERT INTO Topics (Topic) VALUES (?);"
+	insertAuthor   = "INSERT INTO Authors (Name) VALUES (?);"
+	insertQuote    = "INSERT INTO Quotes (BbookId, Quote, Page) VALUES (?, ?, ?);"
+	insertLanguage = "INSERT INTO Languages (Language) VALUES (?);"
+)
+
+const (
+	updateBook     = "UPDATE Books SET AuthorId = ?, TopicId = ?, ISBN = ?, Title = ?, LanguageId = ?, ReleaseDate = ? WHERE Id = ?;"
+	updateTopic    = "UPDATE Topics SET Topic = ? WHERE Id = ?;"
+	updateAuthor   = "UPDATE Authors SET NAME = ? WHERE Id = ?;"
+	updateQuote    = "UPDATE Quotes SET BbookId = ?, Quote = ?, Page = ? WHERE Id = ?;"
+	updateLanguage = "UPDATE Languages SET Language = ? WHERE Id = ?;"
+)
+
+func checkError(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // Prepare the queries used for the tables created by `Init'.
@@ -166,4 +227,44 @@ func (db *database) Prepare() {
 	checkError(err)
 	db.updateQuoteStmt, err = db.connection.Prepare(updateQuote)
 	checkError(err)
+}
+
+func (db database) GetTopicById(id int) (topic Topic, err error) {
+	return
+}
+
+func (db database) GetTopics() (topics []Topic, err error) {
+	return
+}
+
+func (db database) GetAuthorById(id int) (author Author, err error) {
+	return
+}
+
+func (db database) GetAuthors() (authors []Author, err error) {
+	return
+}
+
+func (db database) GetLanguageById(id int) (language Language, err error) {
+	return
+}
+
+func (db database) GetLanguages() (languages []Language, err error) {
+	return
+}
+
+func (db database) GetBookById() (book Book, err error) {
+	return
+}
+
+func (db database) GetBooks() (books []Book, err error) {
+	return
+}
+
+func (db database) GetQuoteById() (quote Quote, err error) {
+	return
+}
+
+func (db database) GetQuotes() (quotes []Quote, err error) {
+	return
 }
