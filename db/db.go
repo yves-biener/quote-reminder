@@ -2,14 +2,15 @@ package quote
 
 import (
 	"database/sql"
-	"log"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 type DAO interface {
-	Commit() (sql.Result, error)
+	// Commit changes of the DAO object to the database, returning the
+	// associated id of the DAO or an error if Commit failed
+	Commit() (int, error)
 }
 
 type Quote struct {
@@ -21,12 +22,28 @@ type Quote struct {
 	stmt       *sql.Stmt
 }
 
-func (quote Quote) Commit() (res sql.Result, err error) {
+func (db database) NewQuote(book Book) (quote Quote) {
+	quote.stmt = db.insertQuoteStmt
+	quote.Book = book
+	return
+}
+
+func (quote Quote) Commit() (id int, err error) {
 	if quote.id == 0 { // Insert
-		quote.Book.Commit()
-		res, err = quote.stmt.Exec(quote.Book.id, quote.Quote, quote.Page)
+		quote.Book.id, err = quote.Book.Commit()
+		if err != nil {
+			return -1, err
+		}
+		res, err := quote.stmt.Exec(quote.Book.id, quote.Quote, quote.Page)
+		if err != nil {
+			return -1, err
+		}
+		insertedId, e := res.LastInsertId()
+		id = int(insertedId)
+		err = e
 	} else { // Update
-		res, err = quote.stmt.Exec(quote.Book.id, quote.Quote, quote.Page, quote.id)
+		_, err = quote.stmt.Exec(quote.Book.id, quote.Quote, quote.Page, quote.id)
+		id = quote.id
 	}
 	return
 }
@@ -42,14 +59,38 @@ type Book struct {
 	stmt        *sql.Stmt
 }
 
-func (book Book) Commit() (res sql.Result, err error) {
+func (db database) NewBook(author Author, topic Topic, language Language) (book Book) {
+	book.stmt = db.insertBookStmt
+	book.Author = author
+	book.Topic = topic
+	book.Language = language
+	return
+}
+
+func (book Book) Commit() (id int, err error) {
 	if book.id == 0 { // Insert
-		book.Author.Commit()
-		book.Topic.Commit()
-		book.Language.Commit()
-		res, err = book.stmt.Exec(book.Author.id, book.Topic.id, book.Title, book.ISBN, book.Language.id, book.ReleaseDate)
+		book.Author.id, err = book.Author.Commit()
+		if err != nil {
+			return
+		}
+		book.Topic.id, err = book.Topic.Commit()
+		if err != nil {
+			return
+		}
+		book.Language.id, err = book.Language.Commit()
+		if err != nil {
+			return
+		}
+		res, err := book.stmt.Exec(book.Author.id, book.Topic.id, book.Title, book.ISBN, book.Language.id, book.ReleaseDate)
+		if err != nil {
+			return -1, err
+		}
+		insertedId, e := res.LastInsertId()
+		id = int(insertedId)
+		err = e
 	} else { // Update
-		res, err = book.stmt.Exec(book.Author.id, book.Topic.id, book.Title, book.ISBN, book.Language.id, book.ReleaseDate, book.id)
+		_, err = book.stmt.Exec(book.Author.id, book.Topic.id, book.Title, book.ISBN, book.Language.id, book.ReleaseDate, book.id)
+		id = book.id
 	}
 	return
 }
@@ -60,11 +101,23 @@ type Author struct {
 	stmt *sql.Stmt
 }
 
-func (author Author) Commit() (res sql.Result, err error) {
+func (db database) NewAuthor() (author Author) {
+	author.stmt = db.insertAuthorStmt
+	return
+}
+
+func (author *Author) Commit() (id int, err error) {
 	if author.id == 0 { // Insert
-		res, err = author.stmt.Exec(author.Name)
+		res, err := author.stmt.Exec(author.Name)
+		if err != nil {
+			return -1, err
+		}
+		insertedId, e := res.LastInsertId()
+		id = int(insertedId)
+		err = e
 	} else { // Update
-		res, err = author.stmt.Exec(author.Name, author.id)
+		_, err = author.stmt.Exec(author.Name, author.id)
+		id = author.id
 	}
 	return
 }
@@ -75,11 +128,23 @@ type Topic struct {
 	stmt  *sql.Stmt
 }
 
-func (topic Topic) Commit() (res sql.Result, err error) {
+func (db database) NewTopic() (topic Topic) {
+	topic.stmt = db.insertTopicStmt
+	return
+}
+
+func (topic Topic) Commit() (id int, err error) {
 	if topic.id == 0 { // Insert
-		res, err = topic.stmt.Exec(topic.Topic)
+		res, err := topic.stmt.Exec(topic.Topic)
+		if err != nil {
+			return -1, err
+		}
+		insertedId, e := res.LastInsertId()
+		id = int(insertedId)
+		err = e
 	} else { // Update
-		res, err = topic.stmt.Exec(topic.Topic, topic.id)
+		_, err = topic.stmt.Exec(topic.Topic, topic.id)
+		id = topic.id
 	}
 	return
 }
@@ -90,18 +155,41 @@ type Language struct {
 	stmt     *sql.Stmt
 }
 
-func (language Language) Commit() (res sql.Result, err error) {
+func (db database) NewLanguage() (language Language) {
+	language.stmt = db.insertLanguageStmt
+	return
+}
+
+func (language Language) Commit() (id int, err error) {
 	if language.id == 0 { // Insert
-		res, err = language.stmt.Exec(language.Language)
+		res, err := language.stmt.Exec(language.Language)
+		if err != nil {
+			return -1, err
+		}
+		insertedId, e := res.LastInsertId()
+		id = int(insertedId)
+		err = e
 	} else { // Update
-		res, err = language.stmt.Exec(language.Language, language.id)
+		_, err = language.stmt.Exec(language.Language, language.id)
+		id = language.id
 	}
 	return
 }
 
 type database struct {
-	// do I even need this? Or can I just use sql.Stmt?
 	connection *sql.DB
+	// select statements
+	selectBooksStmt     *sql.Stmt
+	selectTopicsStmt    *sql.Stmt
+	selectAuthorsStmt   *sql.Stmt
+	selectQuotesStmt    *sql.Stmt
+	selectLanguagesStmt *sql.Stmt
+	// select by id statements
+	selectBookStmt     *sql.Stmt
+	selectTopicStmt    *sql.Stmt
+	selectAuthorStmt   *sql.Stmt
+	selectQuoteStmt    *sql.Stmt
+	selectLanguageStmt *sql.Stmt
 	// insert statements
 	insertBookStmt     *sql.Stmt
 	insertTopicStmt    *sql.Stmt
@@ -119,71 +207,120 @@ type database struct {
 // Connect to an sqlite database located at `filename` This function ensures
 // that the file will be created if it does not exist, create the required
 // tables if it can successfully open the file
-func Connect(filename string) (db *database) {
-	var err error
+func Connect(filename string) (db *database, err error) {
 	db = new(database)
 	db.connection, err = sql.Open("sqlite3", filename)
-	defer db.connection.Close()
 	if err != nil {
-		log.Fatalf("Could not open database: '%s' due to '%s'\n", filename, err)
+		return
 	}
 	db.Init()
 	db.Prepare()
 	return
 }
 
+// Close the connection to the database, to a closed database no statements can
+// be executed, meaning that every `Commit` call of any `DAO` will fail
+func (db *database) Close() {
+	db.connection.Close()
+}
+
 // create tables
 const (
 	createBook = `CREATE TABLE Books (
-Id int IDENTITY(1,1) PRIMARY KEY,
-AuthorId int,
-TopicId int,
-ISBN NOT NULL UNIQUE,
+Id INTEGER PRIMARY KEY AUTOINCREMENT,
+AuthorId INTEGER,
+TopicId INTEGER,
+ISBN varchar NOT NULL UNIQUE,
 Title varchar NOT NULL,
-LanguageId int,
+LanguageId INTEGER,
 ReleaseDate date NOT NULL,
 FOREIGN KEY (AuthorId) REFERENCES Authors(Id),
 FOREIGN KEY (TopicId) REFERENCES Topics(Id),
 FOREIGN KEY (LanguageId) REFERENCES Languages(Id)
 );`
 	createTopic = `CREATE TABLE Topics (
-Id int IDENTITY(1,1) PRIMARY KEY,
+Id INTEGER PRIMARY KEY AUTOINCREMENT,
 Topic varchar NOT NULL UNIQUE
 );`
 	createAuthor = `CREATE TABLE Authors (
-Id int IDENTITY(1,1) PRIMARY KEY,
+Id INTEGER PRIMARY KEY AUTOINCREMENT,
 Name varchar NOT NULL UNIQUE
 );`
 	createQuote = `CREATE TABLE Quotes (
-Id int IDENTITY(1,1) PRIMARY KEY,
-BbookId int,
+Id INTEGER PRIMARY KEY AUTOINCREMENT,
+BookId INTEGER,
 Quote varchar NOT NULL,
-Page int NOT NULL,
+Page INTEGER NOT NULL,
 RecordDate date NOT NULL DEFAULT CURRENT_DATE,
-FOREIGN KEY (BbookId) REFERENCES Books(Id)
+FOREIGN KEY (BookId) REFERENCES Books(Id)
 );`
 	createLanguage = `CREATE TABLE Languages (
-Id int IDENTITY(1,1) PRIMARY KEY,
+Id INTEGER PRIMARY KEY AUTOINCREMENT,
 Language varchar NOT NULL UNIQUE
 );`
 )
 
 // Initialize the database by creating the tables required for quote.
-func (db *database) Init() {
+func (db *database) Init() (err error) {
 	// create tables
-	db.connection.Exec(createTopic)
-	db.connection.Exec(createAuthor)
-	db.connection.Exec(createLanguage)
-	db.connection.Exec(createBook)
-	db.connection.Exec(createQuote)
+	_, err = db.connection.Exec(createTopic)
+	if err != nil {
+		return
+	}
+	_, err = db.connection.Exec(createAuthor)
+	if err != nil {
+		return
+	}
+	_, err = db.connection.Exec(createLanguage)
+	if err != nil {
+		return
+	}
+	_, err = db.connection.Exec(createBook)
+	if err != nil {
+		return
+	}
+	_, err = db.connection.Exec(createQuote)
+	return
 }
 
 // Prepare Statements
 const (
+	selectBooks = `SELECT * FROM Books
+JOIN Authors ON Books.AuthorId = Authors.Id
+JOIN Topics ON Books.TopicId = Topics.Id
+JOIN Languages ON Books.LanguageId = Languages.Id;`
+	selectTopics  = "SELECT * FROM Topics;"
+	selectAuthors = "SELECT * FROM Authors;"
+	selectQuotes  = `SELECT * FROM Quotes
+JOIN Books ON Quotes.BookId = Books.Id
+JOIN Authors ON Books.AuthorId = Authors.Id
+JOIN Topics ON Books.TopicId = Topics.Id
+JOIN Languages ON Books.LanguageId = Languages.Id;`
+	selectLanguages = "SELECT * FROM Languages;"
+)
+
+const (
+	selectBook = `SELECT * FROM Books
+JOIN Authors ON Books.AuthorId = Authors.Id
+JOIN Topics ON Books.TopicId = Topics.Id
+JOIN Languages ON Books.LanguageId = Languages.Id
+WHERE Books.Id = ?;`
+	selectTopic  = "SELECT * FROM Topics WHERE Id = ?;"
+	selectAuthor = "SELECT * FROM Authors WHERE Id = ?;"
+	selectQuote  = `SELECT * FROM Quotes
+JOIN Books ON Quotes.BookId = Books.Id
+JOIN Authors ON Books.AuthorId = Authors.Id
+JOIN Topics ON Books.TopicId = Topics.Id
+JOIN Languages ON Books.LanguageId = Languages.Id
+WHERE Quotes.Id = ?;`
+	selectLanguage = "SELECT * FROM Languages WHERE Id = ?;"
+)
+
+const (
 	insertBook     = "INSERT INTO Books (AuthorId, TopicId, ISBN, Title, LanguageId, ReleaseDate) VALUES (?, ?, ?, ?, ?, ?);"
 	insertTopic    = "INSERT INTO Topics (Topic) VALUES (?);"
 	insertAuthor   = "INSERT INTO Authors (Name) VALUES (?);"
-	insertQuote    = "INSERT INTO Quotes (BbookId, Quote, Page) VALUES (?, ?, ?);"
+	insertQuote    = "INSERT INTO Quotes (BookId, Quote, Page) VALUES (?, ?, ?);"
 	insertLanguage = "INSERT INTO Languages (Language) VALUES (?);"
 )
 
@@ -191,80 +328,281 @@ const (
 	updateBook     = "UPDATE Books SET AuthorId = ?, TopicId = ?, ISBN = ?, Title = ?, LanguageId = ?, ReleaseDate = ? WHERE Id = ?;"
 	updateTopic    = "UPDATE Topics SET Topic = ? WHERE Id = ?;"
 	updateAuthor   = "UPDATE Authors SET NAME = ? WHERE Id = ?;"
-	updateQuote    = "UPDATE Quotes SET BbookId = ?, Quote = ?, Page = ? WHERE Id = ?;"
+	updateQuote    = "UPDATE Quotes SET BookId = ?, Quote = ?, Page = ? WHERE Id = ?;"
 	updateLanguage = "UPDATE Languages SET Language = ? WHERE Id = ?;"
 )
 
-func checkError(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 // Prepare the queries used for the tables created by `Init'.
-func (db *database) Prepare() {
-	var err error
+func (db *database) Prepare() (err error) {
+	// select statements
+	db.selectTopicsStmt, err = db.connection.Prepare(selectTopics)
+	if err != nil {
+		return
+	}
+	db.selectAuthorsStmt, err = db.connection.Prepare(selectAuthors)
+	if err != nil {
+		return
+	}
+	db.selectLanguagesStmt, err = db.connection.Prepare(selectLanguages)
+	if err != nil {
+		return
+	}
+	db.selectBooksStmt, err = db.connection.Prepare(selectBooks)
+	if err != nil {
+		return
+	}
+	db.selectQuotesStmt, err = db.connection.Prepare(selectQuotes)
+	if err != nil {
+		return
+	}
+
+	// select by id statements
+	db.selectTopicStmt, err = db.connection.Prepare(selectTopic)
+	if err != nil {
+		return
+	}
+	db.selectAuthorStmt, err = db.connection.Prepare(selectAuthor)
+	if err != nil {
+		return
+	}
+	db.selectLanguageStmt, err = db.connection.Prepare(selectLanguage)
+	if err != nil {
+		return
+	}
+	db.selectBookStmt, err = db.connection.Prepare(selectBook)
+	if err != nil {
+		return
+	}
+	db.selectQuoteStmt, err = db.connection.Prepare(selectQuote)
+	if err != nil {
+		return
+	}
+
 	// insert statements
 	db.insertTopicStmt, err = db.connection.Prepare(insertTopic)
-	checkError(err)
+	if err != nil {
+		return
+	}
 	db.insertAuthorStmt, err = db.connection.Prepare(insertAuthor)
-	checkError(err)
+	if err != nil {
+		return
+	}
 	db.insertLanguageStmt, err = db.connection.Prepare(insertLanguage)
-	checkError(err)
+	if err != nil {
+		return
+	}
 	db.insertBookStmt, err = db.connection.Prepare(insertBook)
-	checkError(err)
+	if err != nil {
+		return
+	}
 	db.insertQuoteStmt, err = db.connection.Prepare(insertQuote)
-	checkError(err)
+	if err != nil {
+		return
+	}
 
 	// update statements
 	db.updateTopicStmt, err = db.connection.Prepare(updateTopic)
-	checkError(err)
+	if err != nil {
+		return
+	}
 	db.updateAuthorStmt, err = db.connection.Prepare(updateAuthor)
-	checkError(err)
+	if err != nil {
+		return
+	}
 	db.updateLanguageStmt, err = db.connection.Prepare(updateLanguage)
-	checkError(err)
+	if err != nil {
+		return
+	}
 	db.updateBookStmt, err = db.connection.Prepare(updateBook)
-	checkError(err)
+	if err != nil {
+		return
+	}
 	db.updateQuoteStmt, err = db.connection.Prepare(updateQuote)
-	checkError(err)
+	return
 }
 
-func (db database) GetTopicById(id int) (topic Topic, err error) {
+func (db database) GetTopic(id int) (topic Topic, err error) {
+	var res *sql.Rows
+	if res, err = db.selectTopicStmt.Query(id); res != nil {
+		for res.Next() {
+			topic.stmt = db.updateTopicStmt
+			res.Scan(&topic.id, &topic.Topic)
+		}
+	}
 	return
 }
 
 func (db database) GetTopics() (topics []Topic, err error) {
+	var res *sql.Rows
+	if res, err = db.selectTopicsStmt.Query(); res != nil {
+		for res.Next() {
+			topic := Topic{stmt: db.updateTopicStmt}
+			res.Scan(&topic.id, &topic.Topic)
+			topics = append(topics, topic)
+		}
+	}
 	return
 }
 
-func (db database) GetAuthorById(id int) (author Author, err error) {
+func (db database) GetAuthor(id int) (author Author, err error) {
+	var res *sql.Rows
+	if res, err = db.selectAuthorStmt.Query(id); res != nil {
+		for res.Next() {
+			author.stmt = db.updateTopicStmt
+			res.Scan(&author.id, &author.Name)
+		}
+	}
 	return
 }
 
 func (db database) GetAuthors() (authors []Author, err error) {
+	var res *sql.Rows
+	if res, err = db.selectAuthorsStmt.Query(); res != nil {
+		for res.Next() {
+			author := Author{stmt: db.updateTopicStmt}
+			res.Scan(&author.id, &author.Name)
+			authors = append(authors, author)
+		}
+	}
 	return
 }
 
-func (db database) GetLanguageById(id int) (language Language, err error) {
+func (db database) GetLanguage(id int) (language Language, err error) {
+	var res *sql.Rows
+	if res, err = db.selectLanguageStmt.Query(id); res != nil {
+		for res.Next() {
+			language.stmt = db.updateTopicStmt
+			res.Scan(&language.id, &language.Language)
+		}
+	}
 	return
 }
 
 func (db database) GetLanguages() (languages []Language, err error) {
+	var res *sql.Rows
+	if res, err = db.selectLanguagesStmt.Query(); res != nil {
+		for res.Next() {
+			language := Language{stmt: db.updateTopicStmt}
+			res.Scan(&language.id, &language.Language)
+			languages = append(languages, language)
+		}
+	}
 	return
 }
 
-func (db database) GetBookById() (book Book, err error) {
+func (db database) GetBook(id int) (book Book, err error) {
+	var res *sql.Rows
+	if res, err = db.selectBookStmt.Query(id); res != nil {
+		for res.Next() {
+			book.stmt = db.updateBookStmt
+			book.Language.stmt = db.updateLanguageStmt
+			book.Author.stmt = db.updateAuthorStmt
+			book.Topic.stmt = db.updateTopicStmt
+			res.Scan(&book.id,
+				&book.Author.id,
+				&book.Topic.id,
+				&book.ISBN,
+				&book.Title,
+				&book.Language.id,
+				&book.ReleaseDate,
+				&book.Author.id,
+				&book.Author.Name,
+				&book.Topic.id,
+				&book.Topic.Topic,
+				&book.Language.id,
+				&book.Language.Language)
+		}
+	}
 	return
 }
 
 func (db database) GetBooks() (books []Book, err error) {
+	var res *sql.Rows
+	if res, err = db.selectBooksStmt.Query(); res != nil {
+		for res.Next() {
+			book := Book{stmt: db.updateBookStmt}
+			book.Language.stmt = db.updateLanguageStmt
+			book.Author.stmt = db.updateAuthorStmt
+			book.Topic.stmt = db.updateTopicStmt
+			res.Scan(&book.id,
+				&book.Author.id,
+				&book.Topic.id,
+				&book.ISBN,
+				&book.Title,
+				&book.Language.id,
+				&book.ReleaseDate,
+				&book.Author.id,
+				&book.Author.Name,
+				&book.Topic.id,
+				&book.Topic.Topic,
+				&book.Language.id,
+				&book.Language.Language)
+			books = append(books, book)
+		}
+	}
 	return
 }
 
-func (db database) GetQuoteById() (quote Quote, err error) {
+func (db database) GetQuote(id int) (quote Quote, err error) {
+	var res *sql.Rows
+	if res, err = db.selectQuoteStmt.Query(id); res != nil {
+		for res.Next() {
+			quote.stmt = db.updateQuoteStmt
+			quote.Book.stmt = db.updateBookStmt
+			quote.Book.Author.stmt = db.updateAuthorStmt
+			quote.Book.Topic.stmt = db.updateTopicStmt
+			quote.Book.Language.stmt = db.updateLanguageStmt
+			res.Scan(&quote.id,
+				&quote.Book.id,
+				&quote.Quote,
+				&quote.Page,
+				&quote.RecordDate,
+				&quote.Book.Author.id,
+				&quote.Book.Topic.id,
+				&quote.Book.ISBN,
+				&quote.Book.Title,
+				&quote.Book.Language.id,
+				&quote.Book.ReleaseDate,
+				&quote.Book.Author.id,
+				&quote.Book.Author.Name,
+				&quote.Book.Topic.id,
+				&quote.Book.Topic.Topic,
+				&quote.Book.Language.id,
+				&quote.Book.Language.Language)
+		}
+	}
 	return
 }
 
 func (db database) GetQuotes() (quotes []Quote, err error) {
+	var res *sql.Rows
+	if res, err = db.selectQuotesStmt.Query(); res != nil {
+		for res.Next() {
+			quote := Quote{stmt: db.updateQuoteStmt}
+			quote.Book.stmt = db.updateBookStmt
+			quote.Book.Author.stmt = db.updateAuthorStmt
+			quote.Book.Topic.stmt = db.updateTopicStmt
+			quote.Book.Language.stmt = db.updateLanguageStmt
+			res.Scan(&quote.id,
+				&quote.Book.id,
+				&quote.Quote,
+				&quote.Page,
+				&quote.RecordDate,
+				&quote.Book.id,
+				&quote.Book.Author.id,
+				&quote.Book.Topic.id,
+				&quote.Book.ISBN,
+				&quote.Book.Title,
+				&quote.Book.Language.id,
+				&quote.Book.ReleaseDate,
+				&quote.Book.Author.id,
+				&quote.Book.Author.Name,
+				&quote.Book.Topic.id,
+				&quote.Book.Topic.Topic,
+				&quote.Book.Language.id,
+				&quote.Book.Language.Language)
+			quotes = append(quotes, quote)
+		}
+	}
 	return
 }
