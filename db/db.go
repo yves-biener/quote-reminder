@@ -8,7 +8,7 @@ import (
 )
 
 type DAO interface {
-	// Commit changes of the DAO object to the database, returning the
+	// Commit changes of the DAO object to the Database, returning the
 	// associated id of the DAO or an error if Commit failed
 	Commit() (int, error)
 }
@@ -22,7 +22,7 @@ type Quote struct {
 	stmt       *sql.Stmt
 }
 
-func (db database) NewQuote(book Book) (quote Quote) {
+func (db Database) NewQuote(book Book) (quote Quote) {
 	quote.stmt = db.insertQuoteStmt
 	quote.Book = book
 	return
@@ -59,7 +59,7 @@ type Book struct {
 	stmt        *sql.Stmt
 }
 
-func (db database) NewBook(author Author, topic Topic, language Language) (book Book) {
+func (db Database) NewBook(author Author, topic Topic, language Language) (book Book) {
 	book.stmt = db.insertBookStmt
 	book.Author = author
 	book.Topic = topic
@@ -101,7 +101,7 @@ type Author struct {
 	stmt *sql.Stmt
 }
 
-func (db database) NewAuthor() (author Author) {
+func (db Database) NewAuthor() (author Author) {
 	author.stmt = db.insertAuthorStmt
 	return
 }
@@ -128,7 +128,7 @@ type Topic struct {
 	stmt  *sql.Stmt
 }
 
-func (db database) NewTopic() (topic Topic) {
+func (db Database) NewTopic() (topic Topic) {
 	topic.stmt = db.insertTopicStmt
 	return
 }
@@ -155,7 +155,7 @@ type Language struct {
 	stmt     *sql.Stmt
 }
 
-func (db database) NewLanguage() (language Language) {
+func (db Database) NewLanguage() (language Language) {
 	language.stmt = db.insertLanguageStmt
 	return
 }
@@ -176,7 +176,7 @@ func (language Language) Commit() (id int, err error) {
 	return
 }
 
-type database struct {
+type Database struct {
 	connection *sql.DB
 	// select statements
 	selectBooksStmt     *sql.Stmt
@@ -204,11 +204,11 @@ type database struct {
 	updateLanguageStmt *sql.Stmt
 }
 
-// Connect to an sqlite database located at `filename` This function ensures
+// Connect to an sqlite Database located at `filename` This function ensures
 // that the file will be created if it does not exist, create the required
 // tables if it can successfully open the file
-func Connect(filename string) (db *database, err error) {
-	db = new(database)
+func Connect(filename string) (db *Database, err error) {
+	db = new(Database)
 	db.connection, err = sql.Open("sqlite3", filename)
 	if err != nil {
 		return
@@ -218,9 +218,9 @@ func Connect(filename string) (db *database, err error) {
 	return
 }
 
-// Close the connection to the database, to a closed database no statements can
+// Close the connection to the Database, to a closed Database no statements can
 // be executed, meaning that every `Commit` call of any `DAO` will fail
-func (db *database) Close() {
+func (db *Database) Close() {
 	db.connection.Close()
 }
 
@@ -260,8 +260,8 @@ Language varchar NOT NULL UNIQUE
 );`
 )
 
-// Initialize the database by creating the tables required for quote.
-func (db *database) Init() (err error) {
+// Initialize the Database by creating the tables required for quote.
+func (db *Database) Init() (err error) {
 	// create tables
 	_, err = db.connection.Exec(createTopic)
 	if err != nil {
@@ -333,7 +333,7 @@ const (
 )
 
 // Prepare the queries used for the tables created by `Init'.
-func (db *database) Prepare() (err error) {
+func (db *Database) Prepare() (err error) {
 	// select statements
 	db.selectTopicsStmt, err = db.connection.Prepare(selectTopics)
 	if err != nil {
@@ -421,7 +421,7 @@ func (db *database) Prepare() (err error) {
 	return
 }
 
-func (db database) GetTopic(id int) (topic Topic, err error) {
+func (db Database) GetTopic(id int) (topic Topic, err error) {
 	var res *sql.Rows
 	if res, err = db.selectTopicStmt.Query(id); res != nil {
 		for res.Next() {
@@ -432,7 +432,7 @@ func (db database) GetTopic(id int) (topic Topic, err error) {
 	return
 }
 
-func (db database) GetTopics() (topics []Topic, err error) {
+func (db Database) GetTopics() (topics []Topic, err error) {
 	var res *sql.Rows
 	if res, err = db.selectTopicsStmt.Query(); res != nil {
 		for res.Next() {
@@ -444,7 +444,7 @@ func (db database) GetTopics() (topics []Topic, err error) {
 	return
 }
 
-func (db database) GetAuthor(id int) (author Author, err error) {
+func (db Database) GetAuthor(id int) (author Author, err error) {
 	var res *sql.Rows
 	if res, err = db.selectAuthorStmt.Query(id); res != nil {
 		for res.Next() {
@@ -455,7 +455,7 @@ func (db database) GetAuthor(id int) (author Author, err error) {
 	return
 }
 
-func (db database) GetAuthors() (authors []Author, err error) {
+func (db Database) GetAuthors() (authors []Author, err error) {
 	var res *sql.Rows
 	if res, err = db.selectAuthorsStmt.Query(); res != nil {
 		for res.Next() {
@@ -467,7 +467,7 @@ func (db database) GetAuthors() (authors []Author, err error) {
 	return
 }
 
-func (db database) GetLanguage(id int) (language Language, err error) {
+func (db Database) GetLanguage(id int) (language Language, err error) {
 	var res *sql.Rows
 	if res, err = db.selectLanguageStmt.Query(id); res != nil {
 		for res.Next() {
@@ -478,7 +478,7 @@ func (db database) GetLanguage(id int) (language Language, err error) {
 	return
 }
 
-func (db database) GetLanguages() (languages []Language, err error) {
+func (db Database) GetLanguages() (languages []Language, err error) {
 	var res *sql.Rows
 	if res, err = db.selectLanguagesStmt.Query(); res != nil {
 		for res.Next() {
@@ -490,7 +490,7 @@ func (db database) GetLanguages() (languages []Language, err error) {
 	return
 }
 
-func (db database) GetBook(id int) (book Book, err error) {
+func (db Database) GetBook(id int) (book Book, err error) {
 	var res *sql.Rows
 	if res, err = db.selectBookStmt.Query(id); res != nil {
 		for res.Next() {
@@ -516,7 +516,7 @@ func (db database) GetBook(id int) (book Book, err error) {
 	return
 }
 
-func (db database) GetBooks() (books []Book, err error) {
+func (db Database) GetBooks() (books []Book, err error) {
 	var res *sql.Rows
 	if res, err = db.selectBooksStmt.Query(); res != nil {
 		for res.Next() {
@@ -543,7 +543,7 @@ func (db database) GetBooks() (books []Book, err error) {
 	return
 }
 
-func (db database) GetQuote(id int) (quote Quote, err error) {
+func (db Database) GetQuote(id int) (quote Quote, err error) {
 	var res *sql.Rows
 	if res, err = db.selectQuoteStmt.Query(id); res != nil {
 		for res.Next() {
@@ -574,7 +574,7 @@ func (db database) GetQuote(id int) (quote Quote, err error) {
 	return
 }
 
-func (db database) GetQuotes() (quotes []Quote, err error) {
+func (db Database) GetQuotes() (quotes []Quote, err error) {
 	var res *sql.Rows
 	if res, err = db.selectQuotesStmt.Query(); res != nil {
 		for res.Next() {
