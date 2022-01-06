@@ -130,6 +130,8 @@ const (
 func GetRouter(db *db.Database) (router *mux.Router) {
 	database = db
 	router = mux.NewRouter()
+	// TODO: add middleware which sets content-type to json as this is used
+	// everywhere
 	root := router.PathPrefix("/api").Subrouter()
 	root.HandleFunc("", help)
 
