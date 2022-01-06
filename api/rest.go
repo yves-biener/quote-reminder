@@ -115,6 +115,51 @@ func postAuthor(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`{"id": %d}`, id)))
 }
 
+func getLanguage(w http.ResponseWriter, r *http.Request) {
+	pathParams := mux.Vars(r)
+	w.Header().Set("Content-type", "application/json")
+	id := -1
+	var err error
+	if val, ok := pathParams["id"]; ok {
+		id, err = strconv.Atoi(val)
+		if err != nil {
+			fail(w, err)
+			return
+		}
+	}
+	language, err := database.GetLanguage(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, language)))
+}
+
+func getLanguages(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "application/json")
+	languages, err := database.GetLanguages()
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, languages)))
+}
+
+func postLanguage(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "application/json")
+	language := database.NewLanguage()
+	language.Language = r.PostFormValue("Language")
+	id, err := language.Commit()
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte(fmt.Sprintf(`{"id": %d}`, id)))
+}
+
 func RunServer(db *db.Database) {
 	log.Fatal(http.ListenAndServe(":8000", GetRouter(db)))
 }
@@ -149,7 +194,13 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 	// Post Methods
 	authorsRouter.HandleFunc("", postAuthor).Methods(Post)
 
-	// laguages := api.PathPrefix("/languages").Subrouter()
+	languagesRouter := root.PathPrefix("/languages").Subrouter()
+	// Get Methods
+	languagesRouter.HandleFunc("", getLanguages).Methods(Get)
+	languagesRouter.HandleFunc("/{id}", getLanguage).Methods(Get)
+	// Post Methods
+	languagesRouter.HandleFunc("", postLanguage).Methods(Post)
+
 	// books := api.PathPrefix("/books").Subrouter()
 	// quotes := api.PathPrefix("/quotes").Subrouter()
 	return
