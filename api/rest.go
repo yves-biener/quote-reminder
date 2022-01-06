@@ -58,7 +58,6 @@ func getTopic(w http.ResponseWriter, r *http.Request) {
 }
 
 func postTopic(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", "application/json")
 	topic := database.NewTopic()
 	topic.Topic = r.PostFormValue("Topic")
 	id, err := topic.Commit()
@@ -72,7 +71,6 @@ func postTopic(w http.ResponseWriter, r *http.Request) {
 
 func getAuthor(w http.ResponseWriter, r *http.Request) {
 	pathParams := mux.Vars(r)
-	w.Header().Set("Content-type", "application/json")
 	id := -1
 	var err error
 	if val, ok := pathParams["id"]; ok {
@@ -92,7 +90,6 @@ func getAuthor(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAuthors(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", "application/json")
 	authors, err := database.GetAuthors()
 	if err != nil {
 		fail(w, err)
@@ -103,7 +100,6 @@ func getAuthors(w http.ResponseWriter, r *http.Request) {
 }
 
 func postAuthor(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", "application/json")
 	author := database.NewAuthor()
 	author.Name = r.PostFormValue("Name")
 	id, err := author.Commit()
@@ -117,7 +113,6 @@ func postAuthor(w http.ResponseWriter, r *http.Request) {
 
 func getLanguage(w http.ResponseWriter, r *http.Request) {
 	pathParams := mux.Vars(r)
-	w.Header().Set("Content-type", "application/json")
 	id := -1
 	var err error
 	if val, ok := pathParams["id"]; ok {
@@ -137,7 +132,6 @@ func getLanguage(w http.ResponseWriter, r *http.Request) {
 }
 
 func getLanguages(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", "application/json")
 	languages, err := database.GetLanguages()
 	if err != nil {
 		fail(w, err)
@@ -148,7 +142,6 @@ func getLanguages(w http.ResponseWriter, r *http.Request) {
 }
 
 func postLanguage(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", "application/json")
 	language := database.NewLanguage()
 	language.Language = r.PostFormValue("Language")
 	id, err := language.Commit()
@@ -158,6 +151,13 @@ func postLanguage(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(fmt.Sprintf(`{"id": %d}`, id)))
+}
+
+func jsonContentWrapper(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		h.ServeHTTP(w, r)
+	})
 }
 
 func RunServer(db *db.Database) {
@@ -175,9 +175,9 @@ const (
 func GetRouter(db *db.Database) (router *mux.Router) {
 	database = db
 	router = mux.NewRouter()
-	// TODO: add middleware which sets content-type to json as this is used
-	// everywhere
+
 	root := router.PathPrefix("/api").Subrouter()
+	root.Use(jsonContentWrapper)
 	root.HandleFunc("", help)
 
 	topicsRouter := root.PathPrefix("/topics").Subrouter()
