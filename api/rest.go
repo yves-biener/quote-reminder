@@ -70,6 +70,51 @@ func postTopic(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`{"id": %d}`, id)))
 }
 
+func getAuthor(w http.ResponseWriter, r *http.Request) {
+	pathParams := mux.Vars(r)
+	w.Header().Set("Content-type", "application/json")
+	id := -1
+	var err error
+	if val, ok := pathParams["id"]; ok {
+		id, err = strconv.Atoi(val)
+		if err != nil {
+			fail(w, err)
+			return
+		}
+	}
+	author, err := database.GetAuthor(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, author)))
+}
+
+func getAuthors(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "application/json")
+	authors, err := database.GetAuthors()
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, authors)))
+}
+
+func postAuthor(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "application/json")
+	author := database.NewAuthor()
+	author.Name = r.PostFormValue("Topic")
+	id, err := author.Commit()
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte(fmt.Sprintf(`{"id": %d}`, id)))
+}
+
 func RunServer(db *db.Database) {
 	log.Fatal(http.ListenAndServe(":8000", GetRouter(db)))
 }
@@ -95,7 +140,13 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 	// Post Methods
 	topicsRouter.HandleFunc("", postTopic).Methods(Post)
 
-	// authors := api.PathPrefix("/authors").Subrouter()
+	authorsRouter := root.PathPrefix("/authors").Subrouter()
+	// Get Methods
+	authorsRouter.HandleFunc("", getAuthors).Methods(Get)
+	authorsRouter.HandleFunc("/{id}", getAuthor).Methods(Get)
+	// Post Methods
+	authorsRouter.HandleFunc("", postAuthor).Methods(Post)
+
 	// laguages := api.PathPrefix("/languages").Subrouter()
 	// books := api.PathPrefix("/books").Subrouter()
 	// quotes := api.PathPrefix("/quotes").Subrouter()
