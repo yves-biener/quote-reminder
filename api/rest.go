@@ -38,7 +38,6 @@ func getTopics(w http.ResponseWriter, r *http.Request) {
 func getTopic(w http.ResponseWriter, r *http.Request) {
 	pathParams := mux.Vars(r)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
 	id := -1
 	var err error
 	if val, ok := pathParams["id"]; ok {
@@ -59,6 +58,7 @@ func getTopic(w http.ResponseWriter, r *http.Request) {
 }
 
 func postTopic(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "application/json")
 	topic := database.NewTopic()
 	topic.Topic = r.PostFormValue("Topic")
 	id, err := topic.Commit()
