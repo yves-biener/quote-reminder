@@ -15,7 +15,7 @@ var database *db.Database
 func help(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotFound)
-	// TODO create help message for all the available functions
+	// TODO: create help message for all the available functions
 	w.Write([]byte(`{"message": "not found"}`))
 }
 

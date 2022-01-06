@@ -15,7 +15,7 @@ func main() {
 		log.Fatal(err)
 	}
 	api.RunServer(database)
-	// TODO move these into an test for the db implementation
+	// TODO: move these into an test for the db implementation
 	// database, err := db.Connect("./test.sqlite")
 	// defer database.Close()
 	// if err != nil {
