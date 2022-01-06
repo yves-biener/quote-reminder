@@ -105,7 +105,7 @@ func getAuthors(w http.ResponseWriter, r *http.Request) {
 func postAuthor(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "application/json")
 	author := database.NewAuthor()
-	author.Name = r.PostFormValue("Topic")
+	author.Name = r.PostFormValue("Name")
 	id, err := author.Commit()
 	if err != nil {
 		fail(w, err)
