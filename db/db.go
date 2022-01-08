@@ -424,9 +424,9 @@ func (db *Database) Prepare() (err error) {
 func (db Database) GetTopic(id int) (topic Topic, err error) {
 	var res *sql.Rows
 	if res, err = db.selectTopicStmt.Query(id); res != nil {
-		for res.Next() {
+		for res.Next() && err == nil {
 			topic.stmt = db.updateTopicStmt
-			res.Scan(&topic.id, &topic.Topic)
+			err = res.Scan(&topic.id, &topic.Topic)
 		}
 	}
 	return
@@ -435,9 +435,9 @@ func (db Database) GetTopic(id int) (topic Topic, err error) {
 func (db Database) GetTopics() (topics []Topic, err error) {
 	var res *sql.Rows
 	if res, err = db.selectTopicsStmt.Query(); res != nil {
-		for res.Next() {
+		for res.Next() && err == nil {
 			topic := Topic{stmt: db.updateTopicStmt}
-			res.Scan(&topic.id, &topic.Topic)
+			err = res.Scan(&topic.id, &topic.Topic)
 			topics = append(topics, topic)
 		}
 	}
@@ -447,9 +447,9 @@ func (db Database) GetTopics() (topics []Topic, err error) {
 func (db Database) GetAuthor(id int) (author Author, err error) {
 	var res *sql.Rows
 	if res, err = db.selectAuthorStmt.Query(id); res != nil {
-		for res.Next() {
+		for res.Next() && err == nil {
 			author.stmt = db.updateTopicStmt
-			res.Scan(&author.id, &author.Name)
+			err = res.Scan(&author.id, &author.Name)
 		}
 	}
 	return
@@ -458,9 +458,9 @@ func (db Database) GetAuthor(id int) (author Author, err error) {
 func (db Database) GetAuthors() (authors []Author, err error) {
 	var res *sql.Rows
 	if res, err = db.selectAuthorsStmt.Query(); res != nil {
-		for res.Next() {
+		for res.Next() && err == nil {
 			author := Author{stmt: db.updateTopicStmt}
-			res.Scan(&author.id, &author.Name)
+			err = res.Scan(&author.id, &author.Name)
 			authors = append(authors, author)
 		}
 	}
@@ -470,9 +470,9 @@ func (db Database) GetAuthors() (authors []Author, err error) {
 func (db Database) GetLanguage(id int) (language Language, err error) {
 	var res *sql.Rows
 	if res, err = db.selectLanguageStmt.Query(id); res != nil {
-		for res.Next() {
+		for res.Next() && err == nil {
 			language.stmt = db.updateTopicStmt
-			res.Scan(&language.id, &language.Language)
+			err = res.Scan(&language.id, &language.Language)
 		}
 	}
 	return
@@ -481,9 +481,9 @@ func (db Database) GetLanguage(id int) (language Language, err error) {
 func (db Database) GetLanguages() (languages []Language, err error) {
 	var res *sql.Rows
 	if res, err = db.selectLanguagesStmt.Query(); res != nil {
-		for res.Next() {
+		for res.Next() && err == nil {
 			language := Language{stmt: db.updateTopicStmt}
-			res.Scan(&language.id, &language.Language)
+			err = res.Scan(&language.id, &language.Language)
 			languages = append(languages, language)
 		}
 	}
@@ -493,12 +493,12 @@ func (db Database) GetLanguages() (languages []Language, err error) {
 func (db Database) GetBook(id int) (book Book, err error) {
 	var res *sql.Rows
 	if res, err = db.selectBookStmt.Query(id); res != nil {
-		for res.Next() {
+		for res.Next() && err == nil {
 			book.stmt = db.updateBookStmt
 			book.Language.stmt = db.updateLanguageStmt
 			book.Author.stmt = db.updateAuthorStmt
 			book.Topic.stmt = db.updateTopicStmt
-			res.Scan(&book.id,
+			err = res.Scan(&book.id,
 				&book.Author.id,
 				&book.Topic.id,
 				&book.ISBN,
@@ -519,12 +519,12 @@ func (db Database) GetBook(id int) (book Book, err error) {
 func (db Database) GetBooks() (books []Book, err error) {
 	var res *sql.Rows
 	if res, err = db.selectBooksStmt.Query(); res != nil {
-		for res.Next() {
+		for res.Next() && err == nil {
 			book := Book{stmt: db.updateBookStmt}
 			book.Language.stmt = db.updateLanguageStmt
 			book.Author.stmt = db.updateAuthorStmt
 			book.Topic.stmt = db.updateTopicStmt
-			res.Scan(&book.id,
+			err = res.Scan(&book.id,
 				&book.Author.id,
 				&book.Topic.id,
 				&book.ISBN,
@@ -546,17 +546,18 @@ func (db Database) GetBooks() (books []Book, err error) {
 func (db Database) GetQuote(id int) (quote Quote, err error) {
 	var res *sql.Rows
 	if res, err = db.selectQuoteStmt.Query(id); res != nil {
-		for res.Next() {
+		for res.Next() && err == nil {
 			quote.stmt = db.updateQuoteStmt
 			quote.Book.stmt = db.updateBookStmt
 			quote.Book.Author.stmt = db.updateAuthorStmt
 			quote.Book.Topic.stmt = db.updateTopicStmt
 			quote.Book.Language.stmt = db.updateLanguageStmt
-			res.Scan(&quote.id,
+			err = res.Scan(&quote.id,
 				&quote.Book.id,
 				&quote.Quote,
 				&quote.Page,
 				&quote.RecordDate,
+				&quote.Book.id,
 				&quote.Book.Author.id,
 				&quote.Book.Topic.id,
 				&quote.Book.ISBN,
@@ -577,13 +578,13 @@ func (db Database) GetQuote(id int) (quote Quote, err error) {
 func (db Database) GetQuotes() (quotes []Quote, err error) {
 	var res *sql.Rows
 	if res, err = db.selectQuotesStmt.Query(); res != nil {
-		for res.Next() {
+		for res.Next() && err == nil {
 			quote := Quote{stmt: db.updateQuoteStmt}
 			quote.Book.stmt = db.updateBookStmt
 			quote.Book.Author.stmt = db.updateAuthorStmt
 			quote.Book.Topic.stmt = db.updateTopicStmt
 			quote.Book.Language.stmt = db.updateLanguageStmt
-			res.Scan(&quote.id,
+			err = res.Scan(&quote.id,
 				&quote.Book.id,
 				&quote.Quote,
 				&quote.Page,
