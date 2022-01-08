@@ -6,6 +6,7 @@ import (
 	"net/http"
 	db "quote/db"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -153,6 +154,61 @@ func postLanguage(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`{"id": %d}`, id)))
 }
 
+func getBooks(w http.ResponseWriter, r *http.Request) {
+	books, err := database.GetBooks()
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, books)))
+}
+
+func getBook(w http.ResponseWriter, r *http.Request) {
+	pathParams := mux.Vars(r)
+	id := -1
+	var err error
+	if val, ok := pathParams["id"]; ok {
+		id, err = strconv.Atoi(val)
+		if err != nil {
+			fail(w, err)
+			return
+		}
+	}
+	book, err := database.GetBook(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, book)))
+}
+
+func postBook(w http.ResponseWriter, r *http.Request) {
+	author := database.NewAuthor()
+	author.Name = r.PostFormValue("Name")
+	topic := database.NewTopic()
+	topic.Topic = r.PostFormValue("Topic")
+	language := database.NewLanguage()
+	language.Language = r.PostFormValue("Language")
+	book := database.NewBook(author, topic, language)
+	book.Title = r.PostFormValue("Title")
+	book.ISBN = r.PostFormValue("ISBN")
+	var err error
+	book.ReleaseDate, err = time.Parse(time.ANSIC, r.PostFormValue("ReleaseDate"))
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	id, err := book.Commit()
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte(fmt.Sprintf(`{"id": %d}`, id)))
+}
+
 func jsonContentWrapper(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
@@ -201,7 +257,13 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 	// Post Methods
 	languagesRouter.HandleFunc("", postLanguage).Methods(Post)
 
-	// books := api.PathPrefix("/books").Subrouter()
+	booksRouter := root.PathPrefix("/books").Subrouter()
+	// Get Methods
+	booksRouter.HandleFunc("", getBooks).Methods(Get)
+	booksRouter.HandleFunc("/{id}", getBook).Methods(Get)
+	// Post Methods
+	booksRouter.HandleFunc("", postBook).Methods(Post)
+
 	// quotes := api.PathPrefix("/quotes").Subrouter()
 	return
 }
