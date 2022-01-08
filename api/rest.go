@@ -185,6 +185,7 @@ func getBook(w http.ResponseWriter, r *http.Request) {
 }
 
 func postBook(w http.ResponseWriter, r *http.Request) {
+	var err error
 	author := database.NewAuthor()
 	author.Name = r.PostFormValue("Name")
 	topic := database.NewTopic()
@@ -194,8 +195,70 @@ func postBook(w http.ResponseWriter, r *http.Request) {
 	book := database.NewBook(author, topic, language)
 	book.Title = r.PostFormValue("Title")
 	book.ISBN = r.PostFormValue("ISBN")
-	var err error
 	book.ReleaseDate, err = time.Parse(time.ANSIC, r.PostFormValue("ReleaseDate"))
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	id, err := book.Commit()
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte(fmt.Sprintf(`{"id": %d}`, id)))
+}
+
+func getQuotes(w http.ResponseWriter, r *http.Request) {
+	quotes, err := database.GetQuotes()
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, quotes)))
+}
+
+func getQuote(w http.ResponseWriter, r *http.Request) {
+	pathParams := mux.Vars(r)
+	id := -1
+	var err error
+	if val, ok := pathParams["id"]; ok {
+		id, err = strconv.Atoi(val)
+		if err != nil {
+			fail(w, err)
+			return
+		}
+	}
+	quote, err := database.GetQuote(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, quote)))
+}
+
+func postQuote(w http.ResponseWriter, r *http.Request) {
+	var err error
+	author := database.NewAuthor()
+	author.Name = r.PostFormValue("Name")
+	topic := database.NewTopic()
+	topic.Topic = r.PostFormValue("Topic")
+	language := database.NewLanguage()
+	language.Language = r.PostFormValue("Language")
+	book := database.NewBook(author, topic, language)
+	book.Title = r.PostFormValue("Title")
+	book.ISBN = r.PostFormValue("ISBN")
+	book.ReleaseDate, err = time.Parse(time.ANSIC, r.PostFormValue("ReleaseDate"))
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	quote := database.NewQuote(book)
+	quote.Quote = r.PostFormValue("Quote")
+	quote.RecordDate = time.Now()
+	quote.Page, err = strconv.Atoi(r.PostFormValue("Page"))
 	if err != nil {
 		fail(w, err)
 		return
@@ -264,6 +327,11 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 	// Post Methods
 	booksRouter.HandleFunc("", postBook).Methods(Post)
 
-	// quotes := api.PathPrefix("/quotes").Subrouter()
+	quotesRouter := root.PathPrefix("/quotes").Subrouter()
+	// Get Methods
+	quotesRouter.HandleFunc("", getQuotes).Methods(Get)
+	quotesRouter.HandleFunc("/{id}", getQuote).Methods(Get)
+	// Post Methods
+	quotesRouter.HandleFunc("", postQuote).Methods(Post)
 	return
 }
