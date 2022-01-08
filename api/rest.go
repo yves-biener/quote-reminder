@@ -112,6 +112,16 @@ func postAuthor(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`{"id": %d}`, id)))
 }
 
+func getLanguages(w http.ResponseWriter, r *http.Request) {
+	languages, err := database.GetLanguages()
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, languages)))
+}
+
 func getLanguage(w http.ResponseWriter, r *http.Request) {
 	pathParams := mux.Vars(r)
 	id := -1
@@ -130,16 +140,6 @@ func getLanguage(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`%v`, language)))
-}
-
-func getLanguages(w http.ResponseWriter, r *http.Request) {
-	languages, err := database.GetLanguages()
-	if err != nil {
-		fail(w, err)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`%v`, languages)))
 }
 
 func postLanguage(w http.ResponseWriter, r *http.Request) {
