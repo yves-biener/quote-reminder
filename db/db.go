@@ -228,11 +228,11 @@ func (db *Database) Close() {
 const (
 	createBook = `CREATE TABLE Books (
 Id INTEGER PRIMARY KEY AUTOINCREMENT,
-AuthorId INTEGER,
-TopicId INTEGER,
-ISBN varchar NOT NULL UNIQUE,
+AuthorId INTEGER NOT NULL,
+TopicId INTEGER NOT NULL,
+ISBN varchar UNIQUE,
 Title varchar NOT NULL,
-LanguageId INTEGER,
+LanguageId INTEGER NOT NULL,
 ReleaseDate date NOT NULL,
 FOREIGN KEY (AuthorId) REFERENCES Authors(Id),
 FOREIGN KEY (TopicId) REFERENCES Topics(Id),
@@ -248,7 +248,7 @@ Name varchar NOT NULL UNIQUE
 );`
 	createQuote = `CREATE TABLE Quotes (
 Id INTEGER PRIMARY KEY AUTOINCREMENT,
-BookId INTEGER,
+BookId INTEGER NOT NULL,
 Quote varchar NOT NULL,
 Page INTEGER NOT NULL,
 RecordDate date NOT NULL DEFAULT CURRENT_DATE,
