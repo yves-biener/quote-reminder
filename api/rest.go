@@ -54,6 +54,46 @@ func getTopic(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`%v`, topic)))
 }
 
+func getRelatedBooksOfTopic(w http.ResponseWriter, r *http.Request) {
+	pathParams := mux.Vars(r)
+	id := -1
+	var err error
+	if val, ok := pathParams["id"]; ok {
+		id, err = strconv.Atoi(val)
+		if err != nil {
+			fail(w, err)
+			return
+		}
+	}
+	books, err := database.RelatedBooksOfTopic(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, books)))
+}
+
+func getRelatedQuotesOfTopic(w http.ResponseWriter, r *http.Request) {
+	pathParams := mux.Vars(r)
+	id := -1
+	var err error
+	if val, ok := pathParams["id"]; ok {
+		id, err = strconv.Atoi(val)
+		if err != nil {
+			fail(w, err)
+			return
+		}
+	}
+	quotes, err := database.RelatedQuotesOfTopic(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, quotes)))
+}
+
 func postTopic(w http.ResponseWriter, r *http.Request) {
 	topic := database.NewTopic()
 	topic.Topic = r.PostFormValue("Topic")
@@ -64,6 +104,16 @@ func postTopic(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(fmt.Sprintf(`{"id": %d}`, id)))
+}
+
+func getAuthors(w http.ResponseWriter, r *http.Request) {
+	authors, err := database.GetAuthors()
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, authors)))
 }
 
 func getAuthor(w http.ResponseWriter, r *http.Request) {
@@ -86,14 +136,44 @@ func getAuthor(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`%v`, author)))
 }
 
-func getAuthors(w http.ResponseWriter, r *http.Request) {
-	authors, err := database.GetAuthors()
+func getRelatedBooksOfAuthor(w http.ResponseWriter, r *http.Request) {
+	pathParams := mux.Vars(r)
+	id := -1
+	var err error
+	if val, ok := pathParams["id"]; ok {
+		id, err = strconv.Atoi(val)
+		if err != nil {
+			fail(w, err)
+			return
+		}
+	}
+	books, err := database.RelatedBooksOfAuthor(id)
 	if err != nil {
 		fail(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`%v`, authors)))
+	w.Write([]byte(fmt.Sprintf(`%v`, books)))
+}
+
+func getRelatedQuotesOfAuthor(w http.ResponseWriter, r *http.Request) {
+	pathParams := mux.Vars(r)
+	id := -1
+	var err error
+	if val, ok := pathParams["id"]; ok {
+		id, err = strconv.Atoi(val)
+		if err != nil {
+			fail(w, err)
+			return
+		}
+	}
+	quotes, err := database.RelatedQuotesOfAuthor(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, quotes)))
 }
 
 func postAuthor(w http.ResponseWriter, r *http.Request) {
@@ -138,6 +218,46 @@ func getLanguage(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`%v`, language)))
 }
 
+func getRelatedBooksOfLanguage(w http.ResponseWriter, r *http.Request) {
+	pathParams := mux.Vars(r)
+	id := -1
+	var err error
+	if val, ok := pathParams["id"]; ok {
+		id, err = strconv.Atoi(val)
+		if err != nil {
+			fail(w, err)
+			return
+		}
+	}
+	books, err := database.RelatedBooksOfLanguage(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, books)))
+}
+
+func getRelatedQuotesOfLanguage(w http.ResponseWriter, r *http.Request) {
+	pathParams := mux.Vars(r)
+	id := -1
+	var err error
+	if val, ok := pathParams["id"]; ok {
+		id, err = strconv.Atoi(val)
+		if err != nil {
+			fail(w, err)
+			return
+		}
+	}
+	quotes, err := database.RelatedQuotesOfLanguage(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, quotes)))
+}
+
 func postLanguage(w http.ResponseWriter, r *http.Request) {
 	language := database.NewLanguage()
 	language.Language = r.PostFormValue("Language")
@@ -178,6 +298,26 @@ func getBook(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`%v`, book)))
+}
+
+func getRelatedQuotesOfBook(w http.ResponseWriter, r *http.Request) {
+	pathParams := mux.Vars(r)
+	id := -1
+	var err error
+	if val, ok := pathParams["id"]; ok {
+		id, err = strconv.Atoi(val)
+		if err != nil {
+			fail(w, err)
+			return
+		}
+	}
+	quotes, err := database.RelatedQuotesOfBook(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, quotes)))
 }
 
 func postBook(w http.ResponseWriter, r *http.Request) {
@@ -299,6 +439,8 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 	// Get Methods
 	topicsRouter.HandleFunc("", getTopics).Methods(Get)
 	topicsRouter.HandleFunc("/{id}", getTopic).Methods(Get)
+	topicsRouter.HandleFunc("/{id}/books", getRelatedBooksOfTopic).Methods(Get)
+	topicsRouter.HandleFunc("/{id}/quotes", getRelatedQuotesOfTopic).Methods(Get)
 	// Post Methods
 	topicsRouter.HandleFunc("", postTopic).Methods(Post)
 
@@ -306,6 +448,8 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 	// Get Methods
 	authorsRouter.HandleFunc("", getAuthors).Methods(Get)
 	authorsRouter.HandleFunc("/{id}", getAuthor).Methods(Get)
+	authorsRouter.HandleFunc("/{id}/books", getRelatedBooksOfAuthor).Methods(Get)
+	authorsRouter.HandleFunc("/{id}/quotes", getRelatedQuotesOfAuthor).Methods(Get)
 	// Post Methods
 	authorsRouter.HandleFunc("", postAuthor).Methods(Post)
 
@@ -313,6 +457,8 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 	// Get Methods
 	languagesRouter.HandleFunc("", getLanguages).Methods(Get)
 	languagesRouter.HandleFunc("/{id}", getLanguage).Methods(Get)
+	languagesRouter.HandleFunc("/{id}/books", getRelatedBooksOfLanguage).Methods(Get)
+	languagesRouter.HandleFunc("/{id}/quotes", getRelatedQuotesOfLanguage).Methods(Get)
 	// Post Methods
 	languagesRouter.HandleFunc("", postLanguage).Methods(Post)
 
@@ -320,6 +466,7 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 	// Get Methods
 	booksRouter.HandleFunc("", getBooks).Methods(Get)
 	booksRouter.HandleFunc("/{id}", getBook).Methods(Get)
+	booksRouter.HandleFunc("/{id}/quotes", getRelatedQuotesOfBook).Methods(Get)
 	// Post Methods
 	booksRouter.HandleFunc("", postBook).Methods(Post)
 
