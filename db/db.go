@@ -202,6 +202,14 @@ type Database struct {
 	updateAuthorStmt   *sql.Stmt
 	updateQuoteStmt    *sql.Stmt
 	updateLanguageStmt *sql.Stmt
+	// related entries statements
+	relatedQuotesOfBookStmt     *sql.Stmt
+	relatedBooksOfTopicStmt     *sql.Stmt
+	relatedQuotesOfTopicStmt    *sql.Stmt
+	relatedBooksOfAuthorStmt    *sql.Stmt
+	relatedQuotesOfAuthorStmt   *sql.Stmt
+	relatedBooksOfLanguageStmt  *sql.Stmt
+	relatedQuotesOfLanguageStmt *sql.Stmt
 }
 
 // Connect to an sqlite Database located at `filename` This function ensures
@@ -332,6 +340,49 @@ const (
 	updateLanguage = "UPDATE Languages SET Language = ? WHERE Id = ?;"
 )
 
+// related entries
+const (
+	relatedBooksOfAuthor = `SELECT * FROM Books
+JOIN Authors ON Books.AuthorId = Authors.Id
+JOIN Topics ON Books.TopicId = Topics.Id
+JOIN Languages ON Books.LanguageId = Languages.Id
+WHERE Authors.Id = ?;`
+	relatedQuotesOfAuthor = `SELECT * FROM Quotes
+JOIN Books ON Quotes.BookId = Books.Id
+JOIN Authors ON Books.AuthorId = Authors.Id
+JOIN Topics ON Books.TopicId = Topics.Id
+JOIN Languages ON Books.LanguageId = Languages.Id
+WHERE Authors.Id = ?;`
+	relatedBooksOfLanguage = `SELECT * FROM Books
+JOIN Authors ON Books.AuthorId = Authors.Id
+JOIN Topics ON Books.TopicId = Topics.Id
+JOIN Languages ON Books.LanguageId = Languages.Id
+WHERE Languages.Id = ?;`
+	relatedQuotesOfLanguage = `SELECT * FROM Quotes
+JOIN Books ON Quotes.BookId = Books.Id
+JOIN Authors ON Books.AuthorId = Authors.Id
+JOIN Topics ON Books.TopicId = Topics.Id
+JOIN Languages ON Books.LanguageId = Languages.Id
+WHERE Languages.Id = ?;`
+	relatedBooksOfTopic = `SELECT * FROM Books
+JOIN Authors ON Books.AuthorId = Authors.Id
+JOIN Topics ON Books.TopicId = Topics.Id
+JOIN Languages ON Books.LanguageId = Languages.Id
+WHERE Topics.Id = ?;`
+	relatedQuotesOfTopic = `SELECT * FROM Quotes
+JOIN Books ON Quotes.BookId = Books.Id
+JOIN Authors ON Books.AuthorId = Authors.Id
+JOIN Topics ON Books.TopicId = Topics.Id
+JOIN Languages ON Books.LanguageId = Languages.Id
+WHERE Topics.Id = ?;`
+	relatedQuotesOfBook = `SELECT * FROM Quotes
+JOIN Books ON Quotes.BookId = Books.Id
+JOIN Authors ON Books.AuthorId = Authors.Id
+JOIN Topics ON Books.TopicId = Topics.Id
+JOIN Languages ON Books.LanguageId = Languages.Id
+WHERE Books.Id = ?;`
+)
+
 // Prepare the queries used for the tables created by `Init'.
 func (db *Database) Prepare() (err error) {
 	// select statements
@@ -418,6 +469,33 @@ func (db *Database) Prepare() (err error) {
 		return
 	}
 	db.updateQuoteStmt, err = db.connection.Prepare(updateQuote)
+
+	// related entries statements
+	db.relatedBooksOfTopicStmt, err = db.connection.Prepare(relatedBooksOfTopic)
+	if err != nil {
+		return
+	}
+	db.relatedQuotesOfTopicStmt, err = db.connection.Prepare(relatedQuotesOfTopic)
+	if err != nil {
+		return
+	}
+	db.relatedBooksOfAuthorStmt, err = db.connection.Prepare(relatedBooksOfAuthor)
+	if err != nil {
+		return
+	}
+	db.relatedQuotesOfAuthorStmt, err = db.connection.Prepare(relatedQuotesOfAuthor)
+	if err != nil {
+		return
+	}
+	db.relatedBooksOfLanguageStmt, err = db.connection.Prepare(relatedBooksOfLanguage)
+	if err != nil {
+		return
+	}
+	db.relatedQuotesOfLanguageStmt, err = db.connection.Prepare(relatedQuotesOfLanguage)
+	if err != nil {
+		return
+	}
+	db.relatedQuotesOfBookStmt, err = db.connection.Prepare(relatedQuotesOfBook)
 	return
 }
 
@@ -439,6 +517,66 @@ func (db Database) GetTopics() (topics []Topic, err error) {
 			topic := Topic{stmt: db.updateTopicStmt}
 			err = res.Scan(&topic.id, &topic.Topic)
 			topics = append(topics, topic)
+		}
+	}
+	return
+}
+
+func (db Database) RelatedBooksOfTopic(id int) (books []Book, err error) {
+	var res *sql.Rows
+	if res, err = db.relatedBooksOfTopicStmt.Query(id); res != nil {
+		for res.Next() && err == nil {
+			book := Book{stmt: db.updateBookStmt}
+			book.Language.stmt = db.updateLanguageStmt
+			book.Author.stmt = db.updateAuthorStmt
+			book.Topic.stmt = db.updateTopicStmt
+			err = res.Scan(&book.id,
+				&book.Author.id,
+				&book.Topic.id,
+				&book.ISBN,
+				&book.Title,
+				&book.Language.id,
+				&book.ReleaseDate,
+				&book.Author.id,
+				&book.Author.Name,
+				&book.Topic.id,
+				&book.Topic.Topic,
+				&book.Language.id,
+				&book.Language.Language)
+			books = append(books, book)
+		}
+	}
+	return
+}
+
+func (db Database) RelatedQuotesOfTopic(id int) (quotes []Quote, err error) {
+	var res *sql.Rows
+	if res, err = db.relatedQuotesOfTopicStmt.Query(id); res != nil {
+		for res.Next() && err == nil {
+			quote := Quote{stmt: db.updateQuoteStmt}
+			quote.Book.stmt = db.updateBookStmt
+			quote.Book.Author.stmt = db.updateAuthorStmt
+			quote.Book.Topic.stmt = db.updateTopicStmt
+			quote.Book.Language.stmt = db.updateLanguageStmt
+			err = res.Scan(&quote.id,
+				&quote.Book.id,
+				&quote.Quote,
+				&quote.Page,
+				&quote.RecordDate,
+				&quote.Book.id,
+				&quote.Book.Author.id,
+				&quote.Book.Topic.id,
+				&quote.Book.ISBN,
+				&quote.Book.Title,
+				&quote.Book.Language.id,
+				&quote.Book.ReleaseDate,
+				&quote.Book.Author.id,
+				&quote.Book.Author.Name,
+				&quote.Book.Topic.id,
+				&quote.Book.Topic.Topic,
+				&quote.Book.Language.id,
+				&quote.Book.Language.Language)
+			quotes = append(quotes, quote)
 		}
 	}
 	return
@@ -467,6 +605,66 @@ func (db Database) GetAuthors() (authors []Author, err error) {
 	return
 }
 
+func (db Database) RelatedBooksOfAuthor(id int) (books []Book, err error) {
+	var res *sql.Rows
+	if res, err = db.relatedBooksOfAuthorStmt.Query(id); res != nil {
+		for res.Next() && err == nil {
+			book := Book{stmt: db.updateBookStmt}
+			book.Language.stmt = db.updateLanguageStmt
+			book.Author.stmt = db.updateAuthorStmt
+			book.Topic.stmt = db.updateTopicStmt
+			err = res.Scan(&book.id,
+				&book.Author.id,
+				&book.Topic.id,
+				&book.ISBN,
+				&book.Title,
+				&book.Language.id,
+				&book.ReleaseDate,
+				&book.Author.id,
+				&book.Author.Name,
+				&book.Topic.id,
+				&book.Topic.Topic,
+				&book.Language.id,
+				&book.Language.Language)
+			books = append(books, book)
+		}
+	}
+	return
+}
+
+func (db Database) RelatedQuotesOfAuthor(id int) (quotes []Quote, err error) {
+	var res *sql.Rows
+	if res, err = db.relatedQuotesOfAuthorStmt.Query(id); res != nil {
+		for res.Next() && err == nil {
+			quote := Quote{stmt: db.updateQuoteStmt}
+			quote.Book.stmt = db.updateBookStmt
+			quote.Book.Author.stmt = db.updateAuthorStmt
+			quote.Book.Topic.stmt = db.updateTopicStmt
+			quote.Book.Language.stmt = db.updateLanguageStmt
+			err = res.Scan(&quote.id,
+				&quote.Book.id,
+				&quote.Quote,
+				&quote.Page,
+				&quote.RecordDate,
+				&quote.Book.id,
+				&quote.Book.Author.id,
+				&quote.Book.Topic.id,
+				&quote.Book.ISBN,
+				&quote.Book.Title,
+				&quote.Book.Language.id,
+				&quote.Book.ReleaseDate,
+				&quote.Book.Author.id,
+				&quote.Book.Author.Name,
+				&quote.Book.Topic.id,
+				&quote.Book.Topic.Topic,
+				&quote.Book.Language.id,
+				&quote.Book.Language.Language)
+			quotes = append(quotes, quote)
+		}
+	}
+	return
+}
+
 func (db Database) GetLanguage(id int) (language Language, err error) {
 	var res *sql.Rows
 	if res, err = db.selectLanguageStmt.Query(id); res != nil {
@@ -485,6 +683,66 @@ func (db Database) GetLanguages() (languages []Language, err error) {
 			language := Language{stmt: db.updateTopicStmt}
 			err = res.Scan(&language.id, &language.Language)
 			languages = append(languages, language)
+		}
+	}
+	return
+}
+
+func (db Database) RelatedBooksOfLanguage(id int) (books []Book, err error) {
+	var res *sql.Rows
+	if res, err = db.relatedBooksOfLanguageStmt.Query(id); res != nil {
+		for res.Next() && err == nil {
+			book := Book{stmt: db.updateBookStmt}
+			book.Language.stmt = db.updateLanguageStmt
+			book.Author.stmt = db.updateAuthorStmt
+			book.Topic.stmt = db.updateTopicStmt
+			err = res.Scan(&book.id,
+				&book.Author.id,
+				&book.Topic.id,
+				&book.ISBN,
+				&book.Title,
+				&book.Language.id,
+				&book.ReleaseDate,
+				&book.Author.id,
+				&book.Author.Name,
+				&book.Topic.id,
+				&book.Topic.Topic,
+				&book.Language.id,
+				&book.Language.Language)
+			books = append(books, book)
+		}
+	}
+	return
+}
+
+func (db Database) RelatedQuotesOfLanguage(id int) (quotes []Quote, err error) {
+	var res *sql.Rows
+	if res, err = db.relatedQuotesOfLanguageStmt.Query(id); res != nil {
+		for res.Next() && err == nil {
+			quote := Quote{stmt: db.updateQuoteStmt}
+			quote.Book.stmt = db.updateBookStmt
+			quote.Book.Author.stmt = db.updateAuthorStmt
+			quote.Book.Topic.stmt = db.updateTopicStmt
+			quote.Book.Language.stmt = db.updateLanguageStmt
+			err = res.Scan(&quote.id,
+				&quote.Book.id,
+				&quote.Quote,
+				&quote.Page,
+				&quote.RecordDate,
+				&quote.Book.id,
+				&quote.Book.Author.id,
+				&quote.Book.Topic.id,
+				&quote.Book.ISBN,
+				&quote.Book.Title,
+				&quote.Book.Language.id,
+				&quote.Book.ReleaseDate,
+				&quote.Book.Author.id,
+				&quote.Book.Author.Name,
+				&quote.Book.Topic.id,
+				&quote.Book.Topic.Topic,
+				&quote.Book.Language.id,
+				&quote.Book.Language.Language)
+			quotes = append(quotes, quote)
 		}
 	}
 	return
@@ -538,6 +796,39 @@ func (db Database) GetBooks() (books []Book, err error) {
 				&book.Language.id,
 				&book.Language.Language)
 			books = append(books, book)
+		}
+	}
+	return
+}
+
+func (db Database) RelatedQuotesOfBook(id int) (quotes []Quote, err error) {
+	var res *sql.Rows
+	if res, err = db.relatedQuotesOfBookStmt.Query(id); res != nil {
+		for res.Next() && err == nil {
+			quote := Quote{stmt: db.updateQuoteStmt}
+			quote.Book.stmt = db.updateBookStmt
+			quote.Book.Author.stmt = db.updateAuthorStmt
+			quote.Book.Topic.stmt = db.updateTopicStmt
+			quote.Book.Language.stmt = db.updateLanguageStmt
+			err = res.Scan(&quote.id,
+				&quote.Book.id,
+				&quote.Quote,
+				&quote.Page,
+				&quote.RecordDate,
+				&quote.Book.id,
+				&quote.Book.Author.id,
+				&quote.Book.Topic.id,
+				&quote.Book.ISBN,
+				&quote.Book.Title,
+				&quote.Book.Language.id,
+				&quote.Book.ReleaseDate,
+				&quote.Book.Author.id,
+				&quote.Book.Author.Name,
+				&quote.Book.Topic.id,
+				&quote.Book.Topic.Topic,
+				&quote.Book.Language.id,
+				&quote.Book.Language.Language)
+			quotes = append(quotes, quote)
 		}
 	}
 	return
