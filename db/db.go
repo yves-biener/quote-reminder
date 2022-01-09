@@ -53,7 +53,7 @@ type Book struct {
 	Author      Author
 	Topic       Topic
 	Title       string
-	ISBN        string
+	ISBN        sql.NullString
 	Language    Language
 	ReleaseDate time.Time
 	stmt        *sql.Stmt

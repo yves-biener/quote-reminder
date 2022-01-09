@@ -14,7 +14,6 @@ import (
 var database *db.Database
 
 func help(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotFound)
 	// TODO: create help message for all the available functions
 	w.Write([]byte(`{"message": "not found"}`))
@@ -26,19 +25,17 @@ func fail(w http.ResponseWriter, err error) {
 }
 
 func getTopics(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 	topics, err := database.GetTopics()
 	if err != nil {
 		fail(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("%v", topics)))
+	w.Write([]byte(fmt.Sprintf(`%v`, topics)))
 }
 
 func getTopic(w http.ResponseWriter, r *http.Request) {
 	pathParams := mux.Vars(r)
-	w.Header().Set("Content-Type", "application/json")
 	id := -1
 	var err error
 	if val, ok := pathParams["id"]; ok {
@@ -48,14 +45,13 @@ func getTopic(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	// id should now not be -1
 	topic, err := database.GetTopic(id)
 	if err != nil {
 		fail(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("%v", topic)))
+	w.Write([]byte(fmt.Sprintf(`%v`, topic)))
 }
 
 func postTopic(w http.ResponseWriter, r *http.Request) {
@@ -194,7 +190,7 @@ func postBook(w http.ResponseWriter, r *http.Request) {
 	language.Language = r.PostFormValue("Language")
 	book := database.NewBook(author, topic, language)
 	book.Title = r.PostFormValue("Title")
-	book.ISBN = r.PostFormValue("ISBN")
+	book.ISBN.Scan(r.PostFormValue("ISBN"))
 	book.ReleaseDate, err = time.Parse(time.ANSIC, r.PostFormValue("ReleaseDate"))
 	if err != nil {
 		fail(w, err)
@@ -249,7 +245,7 @@ func postQuote(w http.ResponseWriter, r *http.Request) {
 	language.Language = r.PostFormValue("Language")
 	book := database.NewBook(author, topic, language)
 	book.Title = r.PostFormValue("Title")
-	book.ISBN = r.PostFormValue("ISBN")
+	book.ISBN.Scan(r.PostFormValue("ISBN"))
 	book.ReleaseDate, err = time.Parse(time.ANSIC, r.PostFormValue("ReleaseDate"))
 	if err != nil {
 		fail(w, err)
