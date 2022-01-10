@@ -14,6 +14,7 @@ import (
 var database *db.Database
 
 func help(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Help")
 	w.WriteHeader(http.StatusNotFound)
 	// TODO: create help message for all the available functions
 	w.Write([]byte(`{"message": "not found"}`))
@@ -439,48 +440,115 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 
 	root := router.PathPrefix("/api").Subrouter()
 	root.Use(jsonContentWrapper)
-	root.HandleFunc("", help)
+	root.Path("").HandlerFunc(help)
 
 	topicsRouter := root.PathPrefix("/topics").Subrouter()
 	// Get Methods
-	topicsRouter.HandleFunc("", getTopics).Methods(Get)
-	topicsRouter.HandleFunc("/{id:[0-9]+}", getTopic).Methods(Get)
-	topicsRouter.HandleFunc("/{id:[0-9]+}/books", getRelatedBooksOfTopic).Methods(Get)
-	topicsRouter.HandleFunc("/{id:[0-9]+}/quotes", getRelatedQuotesOfTopic).Methods(Get)
+	topicsRouter.
+		Path("").
+		Queries("q", "{search}").
+		HandlerFunc(getTopics).
+		Methods(Get)
+	topicsRouter.
+		Path("/{id:[0-9]+}").
+		HandlerFunc(getTopic).
+		Methods(Get)
+	topicsRouter.
+		Path("/{id:[0-9]+}/books").
+		HandlerFunc(getRelatedBooksOfTopic).
+		Methods(Get)
+	topicsRouter.
+		Path("/{id:[0-9]+}/quotes").
+		HandlerFunc(getRelatedQuotesOfTopic).
+		Methods(Get)
 	// Post Methods
-	topicsRouter.HandleFunc("", postTopic).Methods(Post)
+	topicsRouter.
+		Path("").
+		HandlerFunc(postTopic).
+		Methods(Post)
 
 	authorsRouter := root.PathPrefix("/authors").Subrouter()
 	// Get Methods
-	authorsRouter.HandleFunc("", getAuthors).Methods(Get)
-	authorsRouter.HandleFunc("/{id:[0-9]+}", getAuthor).Methods(Get)
-	authorsRouter.HandleFunc("/{id:[0-9]+}/books", getRelatedBooksOfAuthor).Methods(Get)
-	authorsRouter.HandleFunc("/{id:[0-9]+}/quotes", getRelatedQuotesOfAuthor).Methods(Get)
+	authorsRouter.
+		Path("").
+		HandlerFunc(getAuthors).
+		Methods(Get)
+	authorsRouter.
+		Path("/{id:[0-9]+}").
+		HandlerFunc(getAuthor).
+		Methods(Get)
+	authorsRouter.
+		Path("/{id:[0-9]+}/books").
+		HandlerFunc(getRelatedBooksOfAuthor).
+		Methods(Get)
+	authorsRouter.
+		Path("/{id:[0-9]+}/quotes").
+		HandlerFunc(getRelatedQuotesOfAuthor).
+		Methods(Get)
 	// Post Methods
-	authorsRouter.HandleFunc("", postAuthor).Methods(Post)
+	authorsRouter.
+		Path("").
+		HandlerFunc(postAuthor).
+		Methods(Post)
 
 	languagesRouter := root.PathPrefix("/languages").Subrouter()
 	// Get Methods
-	languagesRouter.HandleFunc("", getLanguages).Methods(Get)
-	languagesRouter.HandleFunc("/{id:[0-9]+}", getLanguage).Methods(Get)
-	languagesRouter.HandleFunc("/{id:[0-9]+}/books", getRelatedBooksOfLanguage).Methods(Get)
-	languagesRouter.HandleFunc("/{id:[0-9]+}/quotes", getRelatedQuotesOfLanguage).Methods(Get)
+	languagesRouter.
+		Path("").
+		HandlerFunc(getLanguages).
+		Methods(Get)
+	languagesRouter.
+		Path("/{id:[0-9]+}").
+		HandlerFunc(getLanguage).
+		Methods(Get)
+	languagesRouter.
+		Path("/{id:[0-9]+}/books").
+		HandlerFunc(getRelatedBooksOfLanguage).
+		Methods(Get)
+	languagesRouter.
+		Path("/{id:[0-9]+}/quotes").
+		HandlerFunc(getRelatedQuotesOfLanguage).
+		Methods(Get)
 	// Post Methods
-	languagesRouter.HandleFunc("", postLanguage).Methods(Post)
+	languagesRouter.
+		Path("").
+		HandlerFunc(postLanguage).
+		Methods(Post)
 
 	booksRouter := root.PathPrefix("/books").Subrouter()
 	// Get Methods
-	booksRouter.HandleFunc("", getBooks).Methods(Get)
-	booksRouter.HandleFunc("/{id:[0-9]+}", getBook).Methods(Get)
-	booksRouter.HandleFunc("/{id:[0-9]+}/quotes", getRelatedQuotesOfBook).Methods(Get)
+	booksRouter.
+		Path("").
+		HandlerFunc(getBooks).
+		Methods(Get)
+	booksRouter.
+		Path("/{id:[0-9]+}").
+		HandlerFunc(getBook).
+		Methods(Get)
+	booksRouter.
+		Path("/{id:[0-9]+}").
+		HandlerFunc(getRelatedQuotesOfBook).
+		Methods(Get)
 	// Post Methods
-	booksRouter.HandleFunc("", postBook).Methods(Post)
+	booksRouter.
+		Path("").
+		HandlerFunc(postBook).
+		Methods(Post)
 
 	quotesRouter := root.PathPrefix("/quotes").Subrouter()
 	// Get Methods
-	quotesRouter.HandleFunc("", getQuotes).Methods(Get)
-	quotesRouter.HandleFunc("/{id:[0-9]+}", getQuote).Methods(Get)
+	quotesRouter.
+		Path("").
+		HandlerFunc(getQuotes).
+		Methods(Get)
+	quotesRouter.
+		Path("/{id:[0-9]+}").
+		HandlerFunc(getQuote).
+		Methods(Get)
 	// Post Methods
-	quotesRouter.HandleFunc("", postQuote).Methods(Post)
+	quotesRouter.
+		Path("").
+		HandlerFunc(postQuote).
+		Methods(Post)
 	return
 }
