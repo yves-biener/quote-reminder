@@ -6,6 +6,7 @@ import (
 	"net/http"
 	db "quote/db"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -30,6 +31,28 @@ func getTopics(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fail(w, err)
 		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, topics)))
+}
+
+func searchTopics(w http.ResponseWriter, r *http.Request) {
+	pathParams := mux.Vars(r)
+	var topics []db.Topic
+	if val, ok := pathParams["search"]; ok {
+		search := strings.Split(val, " ")
+		for _, q := range search {
+			searchResult, err := database.SearchTopics(q)
+			if err != nil {
+				fail(w, err)
+				return
+			}
+			for _, topic := range searchResult {
+				// there can be search Results more than one in
+				// the resulting topics slice
+				topics = append(topics, topic)
+			}
+		}
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`%v`, topics)))
@@ -117,6 +140,28 @@ func getAuthors(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`%v`, authors)))
 }
 
+func searchAuthors(w http.ResponseWriter, r *http.Request) {
+	pathParams := mux.Vars(r)
+	var authors []db.Author
+	if val, ok := pathParams["search"]; ok {
+		search := strings.Split(val, " ")
+		for _, q := range search {
+			searchResult, err := database.SearchAuthors(q)
+			if err != nil {
+				fail(w, err)
+				return
+			}
+			for _, author := range searchResult {
+				// there can be search Results more than one in
+				// the resulting topics slice
+				authors = append(authors, author)
+			}
+		}
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, authors)))
+}
+
 func getAuthor(w http.ResponseWriter, r *http.Request) {
 	pathParams := mux.Vars(r)
 	id := -1
@@ -194,6 +239,28 @@ func getLanguages(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fail(w, err)
 		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, languages)))
+}
+
+func searchLanguages(w http.ResponseWriter, r *http.Request) {
+	pathParams := mux.Vars(r)
+	var languages []db.Language
+	if val, ok := pathParams["search"]; ok {
+		search := strings.Split(val, " ")
+		for _, q := range search {
+			searchResult, err := database.SearchLanguages(q)
+			if err != nil {
+				fail(w, err)
+				return
+			}
+			for _, language := range searchResult {
+				// there can be search Results more than one in
+				// the resulting topics slice
+				languages = append(languages, language)
+			}
+		}
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`%v`, languages)))
@@ -281,6 +348,34 @@ func getBooks(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`%v`, books)))
 }
 
+func searchBooks(w http.ResponseWriter, r *http.Request) {
+	pathParams := mux.Vars(r)
+	var books []db.Book
+	if val, ok := pathParams["search"]; ok {
+		search := strings.Split(val, " ")
+		for _, q := range search {
+			searchResult, err := database.SearchBooksTitle(q)
+			if err != nil {
+				fail(w, err)
+				return
+			}
+			for _, book := range searchResult {
+				books = append(books, book)
+			}
+			searchResult, err = database.SearchBooksISBN(q)
+			if err != nil {
+				fail(w, err)
+				return
+			}
+			for _, book := range searchResult {
+				books = append(books, book)
+			}
+		}
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, books)))
+}
+
 func getBook(w http.ResponseWriter, r *http.Request) {
 	pathParams := mux.Vars(r)
 	id := -1
@@ -351,6 +446,28 @@ func getQuotes(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fail(w, err)
 		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`%v`, quotes)))
+}
+
+func searchQuotes(w http.ResponseWriter, r *http.Request) {
+	pathParams := mux.Vars(r)
+	var quotes []db.Quote
+	if val, ok := pathParams["search"]; ok {
+		search := strings.Split(val, " ")
+		for _, q := range search {
+			searchResult, err := database.SearchQuotes(q)
+			if err != nil {
+				fail(w, err)
+				return
+			}
+			for _, quote := range searchResult {
+				// there can be search Results more than one in
+				// the resulting topics slice
+				quotes = append(quotes, quote)
+			}
+		}
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`%v`, quotes)))
@@ -447,6 +564,10 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 	topicsRouter.
 		Path("").
 		Queries("q", "{search}").
+		HandlerFunc(searchTopics).
+		Methods(Get)
+	topicsRouter.
+		Path("").
 		HandlerFunc(getTopics).
 		Methods(Get)
 	topicsRouter.
@@ -469,6 +590,11 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 
 	authorsRouter := root.PathPrefix("/authors").Subrouter()
 	// Get Methods
+	authorsRouter.
+		Path("").
+		Queries("q", "{search}").
+		HandlerFunc(searchAuthors).
+		Methods(Get)
 	authorsRouter.
 		Path("").
 		HandlerFunc(getAuthors).
@@ -495,6 +621,11 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 	// Get Methods
 	languagesRouter.
 		Path("").
+		Queries("q", "{search}").
+		HandlerFunc(searchLanguages).
+		Methods(Get)
+	languagesRouter.
+		Path("").
 		HandlerFunc(getLanguages).
 		Methods(Get)
 	languagesRouter.
@@ -519,6 +650,11 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 	// Get Methods
 	booksRouter.
 		Path("").
+		Queries("q", "{search}").
+		HandlerFunc(searchBooks).
+		Methods(Get)
+	booksRouter.
+		Path("").
 		HandlerFunc(getBooks).
 		Methods(Get)
 	booksRouter.
@@ -540,6 +676,11 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 	quotesRouter.
 		Path("").
 		HandlerFunc(getQuotes).
+		Methods(Get)
+	quotesRouter.
+		Path("").
+		Queries("q", "{search}").
+		HandlerFunc(searchQuotes).
 		Methods(Get)
 	quotesRouter.
 		Path("/{id:[0-9]+}").
