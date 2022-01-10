@@ -42,8 +42,8 @@ a similar approach as for [[Printed Books]].
 * What does the database store?
 
 The database stores various information along the quote itself. The database
-should be a relational database. It stores three tables for ~Quote~'s, ~Book~'s
-and ~Author~'s in the following way:
+should be a relational database. It stores three tables for ~Quote~'s, ~Book~'s,
+~Author~'s, ~Topic~'s and ~Language~'s in the following way:
 
 + Quotes
   + Id (PK auto-increment)
@@ -54,11 +54,11 @@ and ~Author~'s in the following way:
 
 + Books
   + Id (PK auto-increment)
-  + AuthorId (FK)
-  + TopicId (FK)
-  + LanguageId (FK)
+  + AuthorId (FK, not null)
+  + TopicId (FK, not null)
+  + ISBN (unique)
   + Title (not null)
-  + ISBN (not null, unique)
+  + LanguageId (FK, not null)
   + ReleaseDate (not null)
 
 + Authors
