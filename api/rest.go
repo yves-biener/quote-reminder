@@ -526,7 +526,7 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 		HandlerFunc(getBook).
 		Methods(Get)
 	booksRouter.
-		Path("/{id:[0-9]+}").
+		Path("/{id:[0-9]+}/quotes").
 		HandlerFunc(getRelatedQuotesOfBook).
 		Methods(Get)
 	// Post Methods
