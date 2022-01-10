@@ -210,6 +210,13 @@ type Database struct {
 	relatedQuotesOfAuthorStmt   *sql.Stmt
 	relatedBooksOfLanguageStmt  *sql.Stmt
 	relatedQuotesOfLanguageStmt *sql.Stmt
+	// searches
+	searchTopicsStmt     *sql.Stmt
+	searchAuthorsStmt    *sql.Stmt
+	searchLanguagesStmt  *sql.Stmt
+	searchBooksTitleStmt *sql.Stmt
+	searchBooksISBNStmt  *sql.Stmt
+	searchQuotesStmt     *sql.Stmt
 }
 
 // Connect to an sqlite Database located at `filename` This function ensures
@@ -383,6 +390,29 @@ JOIN Languages ON Books.LanguageId = Languages.Id
 WHERE Books.Id = ?;`
 )
 
+// searches
+const (
+	searchTopics     = `SELECT * FROM Topics WHERE Topic LIKE '%?%';`
+	searchAuthors    = `SELECT * FROM Authors WHERE Name LIKE '%?%';`
+	searchLanguages  = `SELECT * FROM Languages WHERE Language LIKE '%?%';`
+	searchBooksTitle = `SELECT * FROM Books
+JOIN Authors ON Books.AuthorId = Authors.Id
+JOIN Topics ON Books.TopicId = Topics.Id
+JOIN Languages ON Books.LanguageId = Languages.Id
+WHERE Books.Title LIKE '%?%';`
+	searchBooksISBN = `SELECT * FROM Books
+JOIN Authors ON Books.AuthorId = Authors.Id
+JOIN Topics ON Books.TopicId = Topics.Id
+JOIN Languages ON Books.LanguageId = Languages.Id
+WHERE Books.ISBN LIKE '%?%';`
+	searchQuotes = `SELECT * FROM Quotes
+JOIN Books ON Quotes.BookId = Books.Id
+JOIN Authors ON Books.AuthorId = Authors.Id
+JOIN Topics ON Books.TopicId = Topics.Id
+JOIN Languages ON Books.LanguageId = Languages.Id
+WHERE Quotes.Quote LIKE '%?%';`
+)
+
 // Prepare the queries used for the tables created by `Init'.
 func (db *Database) Prepare() (err error) {
 	// select statements
@@ -469,6 +499,9 @@ func (db *Database) Prepare() (err error) {
 		return
 	}
 	db.updateQuoteStmt, err = db.connection.Prepare(updateQuote)
+	if err != nil {
+		return
+	}
 
 	// related entries statements
 	db.relatedBooksOfTopicStmt, err = db.connection.Prepare(relatedBooksOfTopic)
@@ -496,6 +529,32 @@ func (db *Database) Prepare() (err error) {
 		return
 	}
 	db.relatedQuotesOfBookStmt, err = db.connection.Prepare(relatedQuotesOfBook)
+
+	// searches
+	db.searchTopicsStmt, err = db.connection.Prepare(searchTopics)
+	if err != nil {
+		return
+	}
+	db.searchAuthorsStmt, err = db.connection.Prepare(searchAuthors)
+	if err != nil {
+		return
+	}
+	db.searchLanguagesStmt, err = db.connection.Prepare(searchLanguages)
+	if err != nil {
+		return
+	}
+	db.searchBooksTitleStmt, err = db.connection.Prepare(searchBooksTitle)
+	if err != nil {
+		return
+	}
+	db.searchBooksISBNStmt, err = db.connection.Prepare(searchBooksISBN)
+	if err != nil {
+		return
+	}
+	db.searchQuotesStmt, err = db.connection.Prepare(searchQuotes)
+	if err != nil {
+		return
+	}
 	return
 }
 
@@ -577,6 +636,18 @@ func (db Database) RelatedQuotesOfTopic(id int) (quotes []Quote, err error) {
 				&quote.Book.Language.id,
 				&quote.Book.Language.Language)
 			quotes = append(quotes, quote)
+		}
+	}
+	return
+}
+
+func (db Database) SearchTopics(search string) (topics []Topic, err error) {
+	var res *sql.Rows
+	if res, err = db.searchTopicsStmt.Query(search); res != nil {
+		for res.Next() && err == nil {
+			topic := Topic{stmt: db.updateTopicStmt}
+			err = res.Scan(&topic.id, &topic.Topic)
+			topics = append(topics, topic)
 		}
 	}
 	return
@@ -665,6 +736,18 @@ func (db Database) RelatedQuotesOfAuthor(id int) (quotes []Quote, err error) {
 	return
 }
 
+func (db Database) SearchAuthors(search string) (authors []Author, err error) {
+	var res *sql.Rows
+	if res, err = db.searchAuthorsStmt.Query(search); res != nil {
+		for res.Next() && err != nil {
+			author := Author{stmt: db.updateAuthorStmt}
+			err = res.Scan(&author.id, &author.Name)
+			authors = append(authors, author)
+		}
+	}
+	return
+}
+
 func (db Database) GetLanguage(id int) (language Language, err error) {
 	var res *sql.Rows
 	if res, err = db.selectLanguageStmt.Query(id); res != nil {
@@ -743,6 +826,18 @@ func (db Database) RelatedQuotesOfLanguage(id int) (quotes []Quote, err error) {
 				&quote.Book.Language.id,
 				&quote.Book.Language.Language)
 			quotes = append(quotes, quote)
+		}
+	}
+	return
+}
+
+func (db Database) SearchLanguages(search string) (languages []Language, err error) {
+	var res *sql.Rows
+	if res, err = db.searchLanguagesStmt.Query(search); res != nil {
+		for res.Next() && err == nil {
+			language := Language{stmt: db.updateLanguageStmt}
+			err = res.Scan(&language.id, &language.Language)
+			languages = append(languages, language)
 		}
 	}
 	return
@@ -834,6 +929,60 @@ func (db Database) RelatedQuotesOfBook(id int) (quotes []Quote, err error) {
 	return
 }
 
+func (db Database) SearchBooksTitle(search string) (books []Book, err error) {
+	var res *sql.Rows
+	if res, err = db.searchBooksTitleStmt.Query(search); res != nil {
+		for res.Next() && err == nil {
+			book := Book{stmt: db.updateBookStmt}
+			book.Language.stmt = db.updateLanguageStmt
+			book.Author.stmt = db.updateAuthorStmt
+			book.Topic.stmt = db.updateTopicStmt
+			err = res.Scan(&book.id,
+				&book.Author.id,
+				&book.Topic.id,
+				&book.ISBN,
+				&book.Title,
+				&book.Language.id,
+				&book.ReleaseDate,
+				&book.Author.id,
+				&book.Author.Name,
+				&book.Topic.id,
+				&book.Topic.Topic,
+				&book.Language.id,
+				&book.Language.Language)
+			books = append(books, book)
+		}
+	}
+	return
+}
+
+func (db Database) SearchBooksISBN(search string) (books []Book, err error) {
+	var res *sql.Rows
+	if res, err = db.searchBooksISBNStmt.Query(search); res != nil {
+		for res.Next() && err == nil {
+			book := Book{stmt: db.updateBookStmt}
+			book.Language.stmt = db.updateLanguageStmt
+			book.Author.stmt = db.updateAuthorStmt
+			book.Topic.stmt = db.updateTopicStmt
+			err = res.Scan(&book.id,
+				&book.Author.id,
+				&book.Topic.id,
+				&book.ISBN,
+				&book.Title,
+				&book.Language.id,
+				&book.ReleaseDate,
+				&book.Author.id,
+				&book.Author.Name,
+				&book.Topic.id,
+				&book.Topic.Topic,
+				&book.Language.id,
+				&book.Language.Language)
+			books = append(books, book)
+		}
+	}
+	return
+}
+
 func (db Database) GetQuote(id int) (quote Quote, err error) {
 	var res *sql.Rows
 	if res, err = db.selectQuoteStmt.Query(id); res != nil {
@@ -869,6 +1018,39 @@ func (db Database) GetQuote(id int) (quote Quote, err error) {
 func (db Database) GetQuotes() (quotes []Quote, err error) {
 	var res *sql.Rows
 	if res, err = db.selectQuotesStmt.Query(); res != nil {
+		for res.Next() && err == nil {
+			quote := Quote{stmt: db.updateQuoteStmt}
+			quote.Book.stmt = db.updateBookStmt
+			quote.Book.Author.stmt = db.updateAuthorStmt
+			quote.Book.Topic.stmt = db.updateTopicStmt
+			quote.Book.Language.stmt = db.updateLanguageStmt
+			err = res.Scan(&quote.id,
+				&quote.Book.id,
+				&quote.Quote,
+				&quote.Page,
+				&quote.RecordDate,
+				&quote.Book.id,
+				&quote.Book.Author.id,
+				&quote.Book.Topic.id,
+				&quote.Book.ISBN,
+				&quote.Book.Title,
+				&quote.Book.Language.id,
+				&quote.Book.ReleaseDate,
+				&quote.Book.Author.id,
+				&quote.Book.Author.Name,
+				&quote.Book.Topic.id,
+				&quote.Book.Topic.Topic,
+				&quote.Book.Language.id,
+				&quote.Book.Language.Language)
+			quotes = append(quotes, quote)
+		}
+	}
+	return
+}
+
+func (db Database) SearchQuotes(search string) (quotes []Quote, err error) {
+	var res *sql.Rows
+	if res, err = db.searchQuotesStmt.Query(search); res != nil {
 		for res.Next() && err == nil {
 			quote := Quote{stmt: db.updateQuoteStmt}
 			quote.Book.stmt = db.updateBookStmt
