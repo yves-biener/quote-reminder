@@ -392,25 +392,25 @@ WHERE Books.Id = ?;`
 
 // searches
 const (
-	searchTopics     = `SELECT * FROM Topics WHERE Topic LIKE '%?%';`
-	searchAuthors    = `SELECT * FROM Authors WHERE Name LIKE '%?%';`
-	searchLanguages  = `SELECT * FROM Languages WHERE Language LIKE '%?%';`
+	searchTopics     = `SELECT * FROM Topics WHERE Topic LIKE ?;`
+	searchAuthors    = `SELECT * FROM Authors WHERE Name LIKE ?;`
+	searchLanguages  = `SELECT * FROM Languages WHERE Language LIKE ?;`
 	searchBooksTitle = `SELECT * FROM Books
 JOIN Authors ON Books.AuthorId = Authors.Id
 JOIN Topics ON Books.TopicId = Topics.Id
 JOIN Languages ON Books.LanguageId = Languages.Id
-WHERE Books.Title LIKE '%?%';`
+WHERE Books.Title LIKE ?;`
 	searchBooksISBN = `SELECT * FROM Books
 JOIN Authors ON Books.AuthorId = Authors.Id
 JOIN Topics ON Books.TopicId = Topics.Id
 JOIN Languages ON Books.LanguageId = Languages.Id
-WHERE Books.ISBN LIKE '%?%';`
+WHERE Books.ISBN LIKE ?;`
 	searchQuotes = `SELECT * FROM Quotes
 JOIN Books ON Quotes.BookId = Books.Id
 JOIN Authors ON Books.AuthorId = Authors.Id
 JOIN Topics ON Books.TopicId = Topics.Id
 JOIN Languages ON Books.LanguageId = Languages.Id
-WHERE Quotes.Quote LIKE '%?%';`
+WHERE Quotes.Quote LIKE ?;`
 )
 
 // Prepare the queries used for the tables created by `Init'.
@@ -643,7 +643,7 @@ func (db Database) RelatedQuotesOfTopic(id int) (quotes []Quote, err error) {
 
 func (db Database) SearchTopics(search string) (topics []Topic, err error) {
 	var res *sql.Rows
-	if res, err = db.searchTopicsStmt.Query(search); res != nil {
+	if res, err = db.searchTopicsStmt.Query("%" + search + "%"); res != nil {
 		for res.Next() && err == nil {
 			topic := Topic{stmt: db.updateTopicStmt}
 			err = res.Scan(&topic.id, &topic.Topic)
@@ -738,8 +738,8 @@ func (db Database) RelatedQuotesOfAuthor(id int) (quotes []Quote, err error) {
 
 func (db Database) SearchAuthors(search string) (authors []Author, err error) {
 	var res *sql.Rows
-	if res, err = db.searchAuthorsStmt.Query(search); res != nil {
-		for res.Next() && err != nil {
+	if res, err = db.searchAuthorsStmt.Query("%" + search + "%"); res != nil {
+		for res.Next() && err == nil {
 			author := Author{stmt: db.updateAuthorStmt}
 			err = res.Scan(&author.id, &author.Name)
 			authors = append(authors, author)
@@ -833,7 +833,7 @@ func (db Database) RelatedQuotesOfLanguage(id int) (quotes []Quote, err error) {
 
 func (db Database) SearchLanguages(search string) (languages []Language, err error) {
 	var res *sql.Rows
-	if res, err = db.searchLanguagesStmt.Query(search); res != nil {
+	if res, err = db.searchLanguagesStmt.Query("%" + search + "%"); res != nil {
 		for res.Next() && err == nil {
 			language := Language{stmt: db.updateLanguageStmt}
 			err = res.Scan(&language.id, &language.Language)
@@ -931,7 +931,7 @@ func (db Database) RelatedQuotesOfBook(id int) (quotes []Quote, err error) {
 
 func (db Database) SearchBooksTitle(search string) (books []Book, err error) {
 	var res *sql.Rows
-	if res, err = db.searchBooksTitleStmt.Query(search); res != nil {
+	if res, err = db.searchBooksTitleStmt.Query("%" + search + "%"); res != nil {
 		for res.Next() && err == nil {
 			book := Book{stmt: db.updateBookStmt}
 			book.Language.stmt = db.updateLanguageStmt
@@ -958,7 +958,7 @@ func (db Database) SearchBooksTitle(search string) (books []Book, err error) {
 
 func (db Database) SearchBooksISBN(search string) (books []Book, err error) {
 	var res *sql.Rows
-	if res, err = db.searchBooksISBNStmt.Query(search); res != nil {
+	if res, err = db.searchBooksISBNStmt.Query("%" + search + "%"); res != nil {
 		for res.Next() && err == nil {
 			book := Book{stmt: db.updateBookStmt}
 			book.Language.stmt = db.updateLanguageStmt
@@ -1050,7 +1050,7 @@ func (db Database) GetQuotes() (quotes []Quote, err error) {
 
 func (db Database) SearchQuotes(search string) (quotes []Quote, err error) {
 	var res *sql.Rows
-	if res, err = db.searchQuotesStmt.Query(search); res != nil {
+	if res, err = db.searchQuotesStmt.Query("%" + search + "%"); res != nil {
 		for res.Next() && err == nil {
 			quote := Quote{stmt: db.updateQuoteStmt}
 			quote.Book.stmt = db.updateBookStmt
