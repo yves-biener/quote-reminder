@@ -438,42 +438,42 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 	topicsRouter := root.PathPrefix("/topics").Subrouter()
 	// Get Methods
 	topicsRouter.HandleFunc("", getTopics).Methods(Get)
-	topicsRouter.HandleFunc("/{id}", getTopic).Methods(Get)
-	topicsRouter.HandleFunc("/{id}/books", getRelatedBooksOfTopic).Methods(Get)
-	topicsRouter.HandleFunc("/{id}/quotes", getRelatedQuotesOfTopic).Methods(Get)
+	topicsRouter.HandleFunc("/{id:[0-9]+}", getTopic).Methods(Get)
+	topicsRouter.HandleFunc("/{id:[0-9]+}/books", getRelatedBooksOfTopic).Methods(Get)
+	topicsRouter.HandleFunc("/{id:[0-9]+}/quotes", getRelatedQuotesOfTopic).Methods(Get)
 	// Post Methods
 	topicsRouter.HandleFunc("", postTopic).Methods(Post)
 
 	authorsRouter := root.PathPrefix("/authors").Subrouter()
 	// Get Methods
 	authorsRouter.HandleFunc("", getAuthors).Methods(Get)
-	authorsRouter.HandleFunc("/{id}", getAuthor).Methods(Get)
-	authorsRouter.HandleFunc("/{id}/books", getRelatedBooksOfAuthor).Methods(Get)
-	authorsRouter.HandleFunc("/{id}/quotes", getRelatedQuotesOfAuthor).Methods(Get)
+	authorsRouter.HandleFunc("/{id:[0-9]+}", getAuthor).Methods(Get)
+	authorsRouter.HandleFunc("/{id:[0-9]+}/books", getRelatedBooksOfAuthor).Methods(Get)
+	authorsRouter.HandleFunc("/{id:[0-9]+}/quotes", getRelatedQuotesOfAuthor).Methods(Get)
 	// Post Methods
 	authorsRouter.HandleFunc("", postAuthor).Methods(Post)
 
 	languagesRouter := root.PathPrefix("/languages").Subrouter()
 	// Get Methods
 	languagesRouter.HandleFunc("", getLanguages).Methods(Get)
-	languagesRouter.HandleFunc("/{id}", getLanguage).Methods(Get)
-	languagesRouter.HandleFunc("/{id}/books", getRelatedBooksOfLanguage).Methods(Get)
-	languagesRouter.HandleFunc("/{id}/quotes", getRelatedQuotesOfLanguage).Methods(Get)
+	languagesRouter.HandleFunc("/{id:[0-9]+}", getLanguage).Methods(Get)
+	languagesRouter.HandleFunc("/{id:[0-9]+}/books", getRelatedBooksOfLanguage).Methods(Get)
+	languagesRouter.HandleFunc("/{id:[0-9]+}/quotes", getRelatedQuotesOfLanguage).Methods(Get)
 	// Post Methods
 	languagesRouter.HandleFunc("", postLanguage).Methods(Post)
 
 	booksRouter := root.PathPrefix("/books").Subrouter()
 	// Get Methods
 	booksRouter.HandleFunc("", getBooks).Methods(Get)
-	booksRouter.HandleFunc("/{id}", getBook).Methods(Get)
-	booksRouter.HandleFunc("/{id}/quotes", getRelatedQuotesOfBook).Methods(Get)
+	booksRouter.HandleFunc("/{id:[0-9]+}", getBook).Methods(Get)
+	booksRouter.HandleFunc("/{id:[0-9]+}/quotes", getRelatedQuotesOfBook).Methods(Get)
 	// Post Methods
 	booksRouter.HandleFunc("", postBook).Methods(Post)
 
 	quotesRouter := root.PathPrefix("/quotes").Subrouter()
 	// Get Methods
 	quotesRouter.HandleFunc("", getQuotes).Methods(Get)
-	quotesRouter.HandleFunc("/{id}", getQuote).Methods(Get)
+	quotesRouter.HandleFunc("/{id:[0-9]+}", getQuote).Methods(Get)
 	// Post Methods
 	quotesRouter.HandleFunc("", postQuote).Methods(Post)
 	return
