@@ -354,15 +354,7 @@ func searchBooks(w http.ResponseWriter, r *http.Request) {
 	if val, ok := pathParams["search"]; ok {
 		search := strings.Split(val, " ")
 		for _, q := range search {
-			searchResult, err := database.SearchBooksTitle(q)
-			if err != nil {
-				fail(w, err)
-				return
-			}
-			for _, book := range searchResult {
-				books = append(books, book)
-			}
-			searchResult, err = database.SearchBooksISBN(q)
+			searchResult, err := database.SearchBooks(q)
 			if err != nil {
 				fail(w, err)
 				return
