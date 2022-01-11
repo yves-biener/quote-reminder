@@ -17,13 +17,40 @@ var database *db.Database
 func help(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Help")
 	w.WriteHeader(http.StatusNotFound)
-	// TODO: create help message for all the available functions
+	// TODO: create help message for all the available functions maybe this
+	// can be automated?
 	w.Write([]byte(`{"message": "not found"}`))
 }
 
 func fail(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusInternalServerError)
 	w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
+}
+
+// TODO: move filtering to db.go maybe create custom type for slice of elements
+// as this contains information about what is searched for in the search
+// functions
+func filterBooks(books []db.Book, filters []string) (filtered []db.Book) {
+	for _, filter := range filters {
+		for _, book := range books {
+			if strings.Contains(book.Title, filter) ||
+				strings.Contains(book.ISBN.String, filter) {
+				filtered = append(filtered, book)
+			}
+		}
+	}
+	return
+}
+
+func filterQuotes(quotes []db.Quote, filters []string) (filtered []db.Quote) {
+	for _, filter := range filters {
+		for _, quote := range quotes {
+			if strings.Contains(quote.Quote, filter) {
+				filtered = append(filtered, quote)
+			}
+		}
+	}
+	return
 }
 
 func getTopics(w http.ResponseWriter, r *http.Request) {
@@ -94,6 +121,10 @@ func getRelatedBooksOfTopic(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
+	if val, ok := pathParams["filter"]; ok {
+		filters := strings.Split(val, " ")
+		books = filterBooks(books, filters)
+	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`%v`, books)))
 }
@@ -113,6 +144,10 @@ func getRelatedQuotesOfTopic(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fail(w, err)
 		return
+	}
+	if val, ok := pathParams["filter"]; ok {
+		filters := strings.Split(val, " ")
+		quotes = filterQuotes(quotes, filters)
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`%v`, quotes)))
@@ -198,6 +233,10 @@ func getRelatedBooksOfAuthor(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
+	if val, ok := pathParams["filter"]; ok {
+		filters := strings.Split(val, " ")
+		books = filterBooks(books, filters)
+	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`%v`, books)))
 }
@@ -217,6 +256,10 @@ func getRelatedQuotesOfAuthor(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fail(w, err)
 		return
+	}
+	if val, ok := pathParams["filter"]; ok {
+		filters := strings.Split(val, " ")
+		quotes = filterQuotes(quotes, filters)
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`%v`, quotes)))
@@ -302,6 +345,10 @@ func getRelatedBooksOfLanguage(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
+	if val, ok := pathParams["filter"]; ok {
+		filters := strings.Split(val, " ")
+		books = filterBooks(books, filters)
+	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`%v`, books)))
 }
@@ -321,6 +368,10 @@ func getRelatedQuotesOfLanguage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fail(w, err)
 		return
+	}
+	if val, ok := pathParams["filter"]; ok {
+		filters := strings.Split(val, " ")
+		quotes = filterQuotes(quotes, filters)
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`%v`, quotes)))
@@ -403,6 +454,10 @@ func getRelatedQuotesOfBook(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fail(w, err)
 		return
+	}
+	if val, ok := pathParams["filter"]; ok {
+		filters := strings.Split(val, " ")
+		quotes = filterQuotes(quotes, filters)
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`%v`, quotes)))
@@ -568,7 +623,17 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 		Methods(Get)
 	topicsRouter.
 		Path("/{id:[0-9]+}/books").
+		Queries("q", "{filter}").
 		HandlerFunc(getRelatedBooksOfTopic).
+		Methods(Get)
+	topicsRouter.
+		Path("/{id:[0-9]+}/books").
+		HandlerFunc(getRelatedBooksOfTopic).
+		Methods(Get)
+	topicsRouter.
+		Path("/{id:[0-9]+}/quotes").
+		Queries("q", "{filter}").
+		HandlerFunc(getRelatedQuotesOfTopic).
 		Methods(Get)
 	topicsRouter.
 		Path("/{id:[0-9]+}/quotes").
@@ -597,7 +662,17 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 		Methods(Get)
 	authorsRouter.
 		Path("/{id:[0-9]+}/books").
+		Queries("q", "{filter}").
 		HandlerFunc(getRelatedBooksOfAuthor).
+		Methods(Get)
+	authorsRouter.
+		Path("/{id:[0-9]+}/books").
+		HandlerFunc(getRelatedBooksOfAuthor).
+		Methods(Get)
+	authorsRouter.
+		Path("/{id:[0-9]+}/quotes").
+		Queries("q", "{filter}").
+		HandlerFunc(getRelatedQuotesOfAuthor).
 		Methods(Get)
 	authorsRouter.
 		Path("/{id:[0-9]+}/quotes").
@@ -626,10 +701,12 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 		Methods(Get)
 	languagesRouter.
 		Path("/{id:[0-9]+}/books").
+		Queries("q", "{filter}").
 		HandlerFunc(getRelatedBooksOfLanguage).
 		Methods(Get)
 	languagesRouter.
 		Path("/{id:[0-9]+}/quotes").
+		Queries("q", "{filter}").
 		HandlerFunc(getRelatedQuotesOfLanguage).
 		Methods(Get)
 	// Post Methods
@@ -652,6 +729,11 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 	booksRouter.
 		Path("/{id:[0-9]+}").
 		HandlerFunc(getBook).
+		Methods(Get)
+	booksRouter.
+		Path("/{id:[0-9]+}/quotes").
+		Queries("q", "{filter}").
+		HandlerFunc(getRelatedQuotesOfBook).
 		Methods(Get)
 	booksRouter.
 		Path("/{id:[0-9]+}/quotes").
