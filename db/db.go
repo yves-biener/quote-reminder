@@ -647,7 +647,7 @@ func (db Database) GetAuthor(id int) (author Author, err error) {
 	var res *sql.Rows
 	if res, err = db.selectAuthorStmt.Query(id); res != nil {
 		for res.Next() && err == nil {
-			author.stmt = db.updateTopicStmt
+			author.stmt = db.updateAuthorStmt
 			err = res.Scan(&author.id, &author.Name)
 		}
 	}
@@ -658,7 +658,7 @@ func (db Database) GetAuthors() (authors []Author, err error) {
 	var res *sql.Rows
 	if res, err = db.selectAuthorsStmt.Query(); res != nil {
 		for res.Next() && err == nil {
-			author := Author{stmt: db.updateTopicStmt}
+			author := Author{stmt: db.updateAuthorStmt}
 			err = res.Scan(&author.id, &author.Name)
 			authors = append(authors, author)
 		}
