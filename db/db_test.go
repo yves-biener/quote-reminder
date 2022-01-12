@@ -217,6 +217,110 @@ func TestRelatedBooksOfExistingTopic(t *testing.T) {
 	}
 }
 
+func TestRelatedQuotesOfNonExistingTopic(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	quotes, err := database.RelatedQuotesOfTopic(69)
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(quotes) != 0 {
+		t.Fatal("Found related quotes for non existing topic")
+	}
+}
+
+func TestRelatedQuotesOfExistingTopic(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	expectedId := 1
+	quotes, err := database.RelatedQuotesOfTopic(expectedId)
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedLen := 1
+	actualLen := len(quotes)
+	if actualLen != expectedLen {
+		t.Fatalf(contentError, expectedLen, actualLen)
+	}
+	expectedStmt := database.updateQuoteStmt
+	for _, quote := range quotes {
+		expectedContent := fmt.Sprintf("Quote%d", expectedId)
+		actualContent := quote.Quote
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedContent = fmt.Sprintf("Book%d", expectedId)
+		actualContent = quote.Book.Title
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		actualId := quote.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		actualStmt := quote.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+		actualId = quote.Book.Topic.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Topic%d", expectedId)
+		actualContent = quote.Book.Topic.Topic
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateTopicStmt
+		actualStmt = quote.Book.Topic.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+		actualId = quote.Book.Author.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Author%d", expectedId)
+		actualContent = quote.Book.Author.Name
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateAuthorStmt
+		actualStmt = quote.Book.Author.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+		actualId = quote.Book.Language.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Language%d", expectedId)
+		actualContent = quote.Book.Language.Language
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateLanguageStmt
+		actualStmt = quote.Book.Language.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+	}
+}
+
 func TestInsertNewTopic(t *testing.T) {
 	// Arrange
 	initDatabase(t)
@@ -418,6 +522,110 @@ func TestRelatedBooksOfExistingAuthor(t *testing.T) {
 		}
 		expectedStmt = database.updateLanguageStmt
 		actualStmt = book.Language.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+	}
+}
+
+func TestRelatedQuotesOfNonExistingAuthor(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	quotes, err := database.RelatedQuotesOfAuthor(69)
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(quotes) != 0 {
+		t.Fatal("Found related quotes for non existing author")
+	}
+}
+
+func TestRelatedQuotesOfExistingAuthor(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	expectedId := 1
+	quotes, err := database.RelatedQuotesOfAuthor(expectedId)
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedLen := 1
+	actualLen := len(quotes)
+	if actualLen != expectedLen {
+		t.Fatalf(contentError, expectedLen, actualLen)
+	}
+	expectedStmt := database.updateQuoteStmt
+	for _, quote := range quotes {
+		expectedContent := fmt.Sprintf("Quote%d", expectedId)
+		actualContent := quote.Quote
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedContent = fmt.Sprintf("Book%d", expectedId)
+		actualContent = quote.Book.Title
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		actualId := quote.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		actualStmt := quote.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+		actualId = quote.Book.Topic.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Topic%d", expectedId)
+		actualContent = quote.Book.Topic.Topic
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateTopicStmt
+		actualStmt = quote.Book.Topic.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+		actualId = quote.Book.Author.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Author%d", expectedId)
+		actualContent = quote.Book.Author.Name
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateAuthorStmt
+		actualStmt = quote.Book.Author.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+		actualId = quote.Book.Language.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Language%d", expectedId)
+		actualContent = quote.Book.Language.Language
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateLanguageStmt
+		actualStmt = quote.Book.Language.stmt
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
@@ -631,6 +839,110 @@ func TestRelatedBooksOfExistingLanguage(t *testing.T) {
 	}
 }
 
+func TestRelatedQuotesOfNonExistingLanguage(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	quotes, err := database.RelatedQuotesOfLanguage(69)
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(quotes) != 0 {
+		t.Fatal("Found related quotes for non existing language")
+	}
+}
+
+func TestRelatedQuotesOfExistingLanguage(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	expectedId := 1
+	quotes, err := database.RelatedQuotesOfLanguage(expectedId)
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedLen := 1
+	actualLen := len(quotes)
+	if actualLen != expectedLen {
+		t.Fatalf(contentError, expectedLen, actualLen)
+	}
+	expectedStmt := database.updateQuoteStmt
+	for _, quote := range quotes {
+		expectedContent := fmt.Sprintf("Quote%d", expectedId)
+		actualContent := quote.Quote
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedContent = fmt.Sprintf("Book%d", expectedId)
+		actualContent = quote.Book.Title
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		actualId := quote.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		actualStmt := quote.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+		actualId = quote.Book.Topic.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Topic%d", expectedId)
+		actualContent = quote.Book.Topic.Topic
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateTopicStmt
+		actualStmt = quote.Book.Topic.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+		actualId = quote.Book.Author.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Author%d", expectedId)
+		actualContent = quote.Book.Author.Name
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateAuthorStmt
+		actualStmt = quote.Book.Author.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+		actualId = quote.Book.Language.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Language%d", expectedId)
+		actualContent = quote.Book.Language.Language
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateLanguageStmt
+		actualStmt = quote.Book.Language.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+	}
+}
+
 func TestInsertNewLanguage(t *testing.T) {
 	// Arrange
 	initDatabase(t)
@@ -689,7 +1001,7 @@ func TestGetBooks(t *testing.T) {
 		if len(actualISBN) == 0 {
 			t.Fatalf("ISBN was empty, the value should be not null")
 		}
-		expectedId := i+1
+		expectedId := i + 1
 		actualId := book.id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
