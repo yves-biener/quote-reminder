@@ -1211,3 +1211,169 @@ func TestInsertNewBook(t *testing.T) {
 		t.Fatalf(insertionError, expectedId, actualId)
 	}
 }
+
+func TestGetQuotes(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	quotes, err := database.GetQuotes()
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedStmt := database.updateQuoteStmt
+	for _, quote := range quotes {
+		actualStmt := quote.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+	}
+	expectedLen := 2
+	actualLen := len(quotes)
+	if actualLen != expectedLen {
+		t.Fatalf(lenError, expectedLen, actualLen)
+	}
+	for i, quote := range quotes {
+		expectedId := i + 1
+		expectedContent := fmt.Sprintf("Quote%d", expectedId)
+		actualContent := quote.Quote
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedContent = fmt.Sprintf("Book%d", expectedId)
+		actualContent = quote.Book.Title
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		actualId := quote.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		actualId = quote.Book.Topic.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Topic%d", expectedId)
+		actualContent = quote.Book.Topic.Topic
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateTopicStmt
+		actualStmt := quote.Book.Topic.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+		actualId = quote.Book.Author.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Author%d", expectedId)
+		actualContent = quote.Book.Author.Name
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateAuthorStmt
+		actualStmt = quote.Book.Author.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+		actualId = quote.Book.Language.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Language%d", expectedId)
+		actualContent = quote.Book.Language.Language
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateLanguageStmt
+		actualStmt = quote.Book.Language.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+	}
+}
+
+func TestGetNonExistingQuote(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	quote, err := database.GetQuote(69)
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	defaultQuote := Quote{}
+	if quote != defaultQuote {
+		t.Fatal("Got non default quote for non existing quote id")
+	}
+}
+
+func TestGetExistingQuote(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	expectedId := 1
+	quote, err := database.GetQuote(expectedId)
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedStmt := database.updateQuoteStmt
+	actualStmt := quote.stmt
+	if actualStmt != expectedStmt {
+		t.Fatalf(stmtError, expectedStmt, actualStmt)
+	}
+	actualId := quote.id
+	if actualId != expectedId {
+		t.Fatalf(idError, expectedId, actualId)
+	}
+	expectedQuote := fmt.Sprintf("Quote%d", expectedId)
+	actualQuote := quote.Quote
+	if actualQuote != expectedQuote {
+		t.Fatalf(contentError, expectedQuote, actualQuote)
+	}
+}
+
+func TestInsertNewQuote(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	relatedId := 1
+	book, err := database.GetBook(relatedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	quote := database.NewQuote(book)
+	quote.Quote = "Test Quote"
+	quote.Page = 420
+	// Act
+	actualId, err := quote.Commit()
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedId := 3
+	if actualId != expectedId {
+		t.Fatalf(insertionError, expectedId, actualId)
+	}
+}
