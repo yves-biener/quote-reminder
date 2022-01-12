@@ -445,3 +445,210 @@ func TestInsertNewAuthor(t *testing.T) {
 		t.Fatalf(insertionError, expectedId, actualId)
 	}
 }
+
+func TestGetLanguages(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	languages, err := database.GetLanguages()
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedStmt := database.updateLanguageStmt
+	for _, language := range languages {
+		actualStmt := language.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+	}
+	expectedLen := 2
+	actualLen := len(languages)
+	if actualLen != expectedLen {
+		t.Fatalf(lenError, expectedLen, actualLen)
+	}
+	for i, language := range languages {
+		expectedLanguage := fmt.Sprintf("Language%d", i+1)
+		actualLanguage := language.Language
+		if actualLanguage != expectedLanguage {
+			t.Fatalf(contentError, expectedLanguage, actualLanguage)
+		}
+	}
+}
+
+func TestGetNonExistingLanguage(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	language, err := database.GetLanguage(69)
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	defaultLanguage := Language{}
+	if language != defaultLanguage {
+		t.Fatal("Got non default language for non existing language id")
+	}
+}
+
+func TestGetExistingLanguage(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	expectedId := 1
+	language, err := database.GetLanguage(expectedId)
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedStmt := database.updateLanguageStmt
+	actualStmt := language.stmt
+	if actualStmt != expectedStmt {
+		t.Fatalf(stmtError, expectedStmt, actualStmt)
+	}
+	actualId := language.id
+	if actualId != expectedId {
+		t.Fatalf(idError, expectedId, actualId)
+	}
+	expectedLanguage := fmt.Sprintf("Language%d", expectedId)
+	actualLanguage := language.Language
+	if actualLanguage != expectedLanguage {
+		t.Fatalf(contentError, expectedLanguage, actualLanguage)
+	}
+}
+
+func TestRelatedBooksOfNonExistingLanguage(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	books, err := database.RelatedBooksOfLanguage(69)
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(books) != 0 {
+		t.Fatal("Found related books for non existing language")
+	}
+}
+
+func TestRelatedBooksOfExistingLanguage(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	expectedId := 1
+	books, err := database.RelatedBooksOfLanguage(expectedId)
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedLen := 1
+	actualLen := len(books)
+	if actualLen != expectedLen {
+		t.Fatalf(contentError, expectedLen, actualLen)
+	}
+	expectedStmt := database.updateBookStmt
+	for _, book := range books {
+		expectedContent := fmt.Sprintf("Book%d", expectedId)
+		actualContent := book.Title
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		actualId := book.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		actualStmt := book.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+		actualId = book.Topic.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Topic%d", expectedId)
+		actualContent = book.Topic.Topic
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateTopicStmt
+		actualStmt = book.Topic.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+		actualId = book.Author.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Author%d", expectedId)
+		actualContent = book.Author.Name
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateAuthorStmt
+		actualStmt = book.Author.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+		actualId = book.Language.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Language%d", expectedId)
+		actualContent = book.Language.Language
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateLanguageStmt
+		actualStmt = book.Language.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+	}
+}
+
+func TestInsertNewLanguage(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	language := database.NewLanguage()
+	language.Language = "Test Language"
+	// Act
+	actualId, err := language.Commit()
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedId := 3
+	if actualId != expectedId {
+		t.Fatalf(insertionError, expectedId, actualId)
+	}
+}

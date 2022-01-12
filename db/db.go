@@ -742,7 +742,7 @@ func (db Database) GetLanguage(id int) (language Language, err error) {
 	var res *sql.Rows
 	if res, err = db.selectLanguageStmt.Query(id); res != nil {
 		for res.Next() && err == nil {
-			language.stmt = db.updateTopicStmt
+			language.stmt = db.updateLanguageStmt
 			err = res.Scan(&language.id, &language.Language)
 		}
 	}
@@ -753,7 +753,7 @@ func (db Database) GetLanguages() (languages []Language, err error) {
 	var res *sql.Rows
 	if res, err = db.selectLanguagesStmt.Query(); res != nil {
 		for res.Next() && err == nil {
-			language := Language{stmt: db.updateTopicStmt}
+			language := Language{stmt: db.updateLanguageStmt}
 			err = res.Scan(&language.id, &language.Language)
 			languages = append(languages, language)
 		}
