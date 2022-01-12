@@ -67,6 +67,41 @@ func TestGetTopics(t *testing.T) {
 	}
 }
 
+func TestSearchTopics(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	topics, err := database.SearchTopics("Topic")
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedStmt := database.updateTopicStmt
+	for _, topic := range topics {
+		actualStmt := topic.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+	}
+	expectedLen := 2
+	actualLen := len(topics)
+	if actualLen != expectedLen {
+		t.Fatalf(lenError, expectedLen, actualLen)
+	}
+	for i, topic := range topics {
+		expectedTopic := fmt.Sprintf("Topic%d", i+1)
+		actualTopic := topic.Topic
+		if actualTopic != expectedTopic {
+			t.Fatalf(contentError, expectedTopic, actualTopic)
+		}
+	}
+}
+
 func TestGetNonExistingTopic(t *testing.T) {
 	// Arrange
 	initDatabase(t)
@@ -378,6 +413,41 @@ func TestGetAuthors(t *testing.T) {
 	}
 }
 
+func TestSearchAuthors(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	authors, err := database.SearchAuthors("Author")
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedStmt := database.updateAuthorStmt
+	for _, author := range authors {
+		actualStmt := author.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+	}
+	expectedLen := 2
+	actualLen := len(authors)
+	if actualLen != expectedLen {
+		t.Fatalf(lenError, expectedLen, actualLen)
+	}
+	for i, author := range authors {
+		expectedName := fmt.Sprintf("Author%d", i+1)
+		actualName := author.Name
+		if actualName != expectedName {
+			t.Fatalf(contentError, expectedName, actualName)
+		}
+	}
+}
+
 func TestGetNonExistingAuthor(t *testing.T) {
 	// Arrange
 	initDatabase(t)
@@ -664,6 +734,41 @@ func TestGetLanguages(t *testing.T) {
 	defer database.Close()
 	// Act
 	languages, err := database.GetLanguages()
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedStmt := database.updateLanguageStmt
+	for _, language := range languages {
+		actualStmt := language.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+	}
+	expectedLen := 2
+	actualLen := len(languages)
+	if actualLen != expectedLen {
+		t.Fatalf(lenError, expectedLen, actualLen)
+	}
+	for i, language := range languages {
+		expectedLanguage := fmt.Sprintf("Language%d", i+1)
+		actualLanguage := language.Language
+		if actualLanguage != expectedLanguage {
+			t.Fatalf(contentError, expectedLanguage, actualLanguage)
+		}
+	}
+}
+
+func TestSearchLanguages(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	languages, err := database.SearchLanguages("Language")
 	// Assert
 	if err != nil {
 		t.Fatal(err)
@@ -1021,6 +1126,41 @@ func TestGetBooks(t *testing.T) {
 	}
 }
 
+func TestSearchBooks(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	books, err := database.SearchBooks("Book")
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedStmt := database.updateBookStmt
+	for _, book := range books {
+		actualStmt := book.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+	}
+	expectedLen := 2
+	actualLen := len(books)
+	if actualLen != expectedLen {
+		t.Fatalf(lenError, expectedLen, actualLen)
+	}
+	for i, book := range books {
+		expectedTitle := fmt.Sprintf("Book%d", i+1)
+		actualTitle := book.Title
+		if actualTitle != expectedTitle {
+			t.Fatalf(contentError, expectedTitle, actualTitle)
+		}
+	}
+}
+
 func TestGetNonExistingBook(t *testing.T) {
 	// Arrange
 	initDatabase(t)
@@ -1295,6 +1435,41 @@ func TestGetQuotes(t *testing.T) {
 		actualStmt = quote.Book.Language.stmt
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+	}
+}
+
+func TestSearchQuotes(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	quotes, err := database.SearchQuotes("Quote")
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedStmt := database.updateQuoteStmt
+	for _, quote := range quotes {
+		actualStmt := quote.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+	}
+	expectedLen := 2
+	actualLen := len(quotes)
+	if actualLen != expectedLen {
+		t.Fatalf(lenError, expectedLen, actualLen)
+	}
+	for i, quote := range quotes {
+		expectedQuote := fmt.Sprintf("Quote%d", i+1)
+		actualQuote := quote.Quote
+		if actualQuote != expectedQuote {
+			t.Fatalf(contentError, expectedQuote, actualQuote)
 		}
 	}
 }
