@@ -15,7 +15,6 @@ import (
 var database *db.Database
 
 func help(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Help")
 	w.WriteHeader(http.StatusOK)
 	// TODO: create help message for all the available functions maybe this
 	// can be automated?
