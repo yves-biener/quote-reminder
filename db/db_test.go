@@ -652,3 +652,250 @@ func TestInsertNewLanguage(t *testing.T) {
 		t.Fatalf(insertionError, expectedId, actualId)
 	}
 }
+
+func TestGetBooks(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	books, err := database.GetBooks()
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedStmt := database.updateBookStmt
+	for _, book := range books {
+		actualStmt := book.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+	}
+	expectedLen := 2
+	actualLen := len(books)
+	if actualLen != expectedLen {
+		t.Fatalf(lenError, expectedLen, actualLen)
+	}
+	for i, book := range books {
+		expectedTitle := fmt.Sprintf("Book%d", i+1)
+		actualTitle := book.Title
+		if actualTitle != expectedTitle {
+			t.Fatalf(contentError, expectedTitle, actualTitle)
+		}
+		actualISBN := book.ISBN.String
+		if len(actualISBN) == 0 {
+			t.Fatalf("ISBN was empty, the value should be not null")
+		}
+		expectedId := i+1
+		actualId := book.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		actualId = book.Author.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		actualId = book.Topic.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		actualId = book.Language.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+	}
+}
+
+func TestGetNonExistingBook(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	book, err := database.GetBook(69)
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	defaultBook := Book{}
+	if book != defaultBook {
+		t.Fatal("Got non default book for non existing book id")
+	}
+}
+
+func TestGetExistingBook(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	expectedId := 1
+	book, err := database.GetBook(expectedId)
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedStmt := database.updateBookStmt
+	actualStmt := book.stmt
+	if actualStmt != expectedStmt {
+		t.Fatalf(stmtError, expectedStmt, actualStmt)
+	}
+	actualId := book.id
+	if actualId != expectedId {
+		t.Fatalf(idError, expectedId, actualId)
+	}
+	expectedTitle := fmt.Sprintf("Book%d", expectedId)
+	actualTitle := book.Title
+	if actualTitle != expectedTitle {
+		t.Fatalf(contentError, expectedTitle, actualTitle)
+	}
+}
+
+func TestRelatedQuotesOfNonExistingBook(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	quotes, err := database.RelatedQuotesOfBook(69)
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(quotes) != 0 {
+		t.Fatal("Found related quotes for non existing book")
+	}
+}
+
+func TestRelatedQuotesOfExistingBook(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	// Act
+	expectedId := 1
+	quotes, err := database.RelatedQuotesOfBook(expectedId)
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedLen := 1
+	actualLen := len(quotes)
+	if actualLen != expectedLen {
+		t.Fatalf(contentError, expectedLen, actualLen)
+	}
+	expectedStmt := database.updateQuoteStmt
+	for _, quote := range quotes {
+		expectedContent := fmt.Sprintf("Quote%d", expectedId)
+		actualContent := quote.Quote
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedContent = fmt.Sprintf("Book%d", expectedId)
+		actualContent = quote.Book.Title
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		actualId := quote.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		actualStmt := quote.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+		actualId = quote.Book.Topic.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Topic%d", expectedId)
+		actualContent = quote.Book.Topic.Topic
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateTopicStmt
+		actualStmt = quote.Book.Topic.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+		actualId = quote.Book.Author.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Author%d", expectedId)
+		actualContent = quote.Book.Author.Name
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateAuthorStmt
+		actualStmt = quote.Book.Author.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+		actualId = quote.Book.Language.id
+		if actualId != expectedId {
+			t.Fatalf(idError, expectedId, actualId)
+		}
+		expectedContent = fmt.Sprintf("Language%d", expectedId)
+		actualContent = quote.Book.Language.Language
+		if actualContent != expectedContent {
+			t.Fatalf(contentError, expectedContent, actualContent)
+		}
+		expectedStmt = database.updateLanguageStmt
+		actualStmt = quote.Book.Language.stmt
+		if actualStmt != expectedStmt {
+			t.Fatalf(stmtError, expectedStmt, actualStmt)
+		}
+	}
+}
+
+func TestInsertNewBook(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	relatedId := 1
+	author, err := database.GetAuthor(relatedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	language, err := database.GetLanguage(relatedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	topic, err := database.GetTopic(relatedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	book := database.NewBook(author, topic, language)
+	book.Title = "Test Book"
+	book.ISBN.Scan("965-17-650-5-10")
+	// Act
+	actualId, err := book.Commit()
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedId := 3
+	if actualId != expectedId {
+		t.Fatalf(insertionError, expectedId, actualId)
+	}
+}
