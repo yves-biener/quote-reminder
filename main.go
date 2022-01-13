@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	api "quote/api"
@@ -28,7 +27,6 @@ func main() {
 	}
 	config := mail.Config{}
 	err = json.Unmarshal([]byte(configJson), &config)
-	fmt.Println(config)
 	go mail.Service(database, config)
 
 	api.RunServer(database)
