@@ -14,7 +14,7 @@ type DAO interface {
 }
 
 type Quote struct {
-	id         int
+	Id         int
 	Book       Book
 	Quote      string
 	Page       int
@@ -29,12 +29,12 @@ func (db Database) NewQuote(book Book) (quote Quote) {
 }
 
 func (quote Quote) Commit() (id int, err error) {
-	if quote.id == 0 { // Insert
-		quote.Book.id, err = quote.Book.Commit()
+	if quote.Id == 0 { // Insert
+		quote.Book.Id, err = quote.Book.Commit()
 		if err != nil {
 			return -1, err
 		}
-		res, err := quote.stmt.Exec(quote.Book.id, quote.Quote, quote.Page)
+		res, err := quote.stmt.Exec(quote.Book.Id, quote.Quote, quote.Page)
 		if err != nil {
 			return -1, err
 		}
@@ -42,14 +42,14 @@ func (quote Quote) Commit() (id int, err error) {
 		id = int(insertedId)
 		err = e
 	} else { // Update
-		_, err = quote.stmt.Exec(quote.Book.id, quote.Quote, quote.Page, quote.id)
-		id = quote.id
+		_, err = quote.stmt.Exec(quote.Book.Id, quote.Quote, quote.Page, quote.Id)
+		id = quote.Id
 	}
 	return
 }
 
 type Book struct {
-	id          int
+	Id          int
 	Author      Author
 	Topic       Topic
 	Title       string
@@ -68,20 +68,21 @@ func (db Database) NewBook(author Author, topic Topic, language Language) (book 
 }
 
 func (book Book) Commit() (id int, err error) {
-	if book.id == 0 { // Insert
-		book.Author.id, err = book.Author.Commit()
+	if book.Id == 0 { // Insert
+		book.Author.Id, err = book.Author.Commit()
 		if err != nil {
 			return
 		}
-		book.Topic.id, err = book.Topic.Commit()
+		book.Topic.Id, err = book.Topic.Commit()
 		if err != nil {
 			return
 		}
-		book.Language.id, err = book.Language.Commit()
+		book.Language.Id, err = book.Language.Commit()
 		if err != nil {
 			return
 		}
-		res, err := book.stmt.Exec(book.Author.id, book.Topic.id, book.Title, book.ISBN, book.Language.id, book.ReleaseDate)
+		res, err := book.stmt.Exec(book.Author.Id, book.Topic.Id,
+			book.Title, book.ISBN, book.Language.Id, book.ReleaseDate)
 		if err != nil {
 			return -1, err
 		}
@@ -89,14 +90,15 @@ func (book Book) Commit() (id int, err error) {
 		id = int(insertedId)
 		err = e
 	} else { // Update
-		_, err = book.stmt.Exec(book.Author.id, book.Topic.id, book.Title, book.ISBN, book.Language.id, book.ReleaseDate, book.id)
-		id = book.id
+		_, err = book.stmt.Exec(book.Author.Id, book.Topic.Id,
+			book.Title, book.ISBN, book.Language.Id, book.ReleaseDate, book.Id)
+		id = book.Id
 	}
 	return
 }
 
 type Author struct {
-	id   int
+	Id   int
 	Name string
 	stmt *sql.Stmt
 }
@@ -107,7 +109,7 @@ func (db Database) NewAuthor() (author Author) {
 }
 
 func (author *Author) Commit() (id int, err error) {
-	if author.id == 0 { // Insert
+	if author.Id == 0 { // Insert
 		res, err := author.stmt.Exec(author.Name)
 		if err != nil {
 			return -1, err
@@ -116,14 +118,14 @@ func (author *Author) Commit() (id int, err error) {
 		id = int(insertedId)
 		err = e
 	} else { // Update
-		_, err = author.stmt.Exec(author.Name, author.id)
-		id = author.id
+		_, err = author.stmt.Exec(author.Name, author.Id)
+		id = author.Id
 	}
 	return
 }
 
 type Topic struct {
-	id    int
+	Id    int
 	Topic string
 	stmt  *sql.Stmt
 }
@@ -134,7 +136,7 @@ func (db Database) NewTopic() (topic Topic) {
 }
 
 func (topic Topic) Commit() (id int, err error) {
-	if topic.id == 0 { // Insert
+	if topic.Id == 0 { // Insert
 		res, err := topic.stmt.Exec(topic.Topic)
 		if err != nil {
 			return -1, err
@@ -143,14 +145,14 @@ func (topic Topic) Commit() (id int, err error) {
 		id = int(insertedId)
 		err = e
 	} else { // Update
-		_, err = topic.stmt.Exec(topic.Topic, topic.id)
-		id = topic.id
+		_, err = topic.stmt.Exec(topic.Topic, topic.Id)
+		id = topic.Id
 	}
 	return
 }
 
 type Language struct {
-	id       int
+	Id       int
 	Language string
 	stmt     *sql.Stmt
 }
@@ -161,7 +163,7 @@ func (db Database) NewLanguage() (language Language) {
 }
 
 func (language Language) Commit() (id int, err error) {
-	if language.id == 0 { // Insert
+	if language.Id == 0 { // Insert
 		res, err := language.stmt.Exec(language.Language)
 		if err != nil {
 			return -1, err
@@ -170,8 +172,8 @@ func (language Language) Commit() (id int, err error) {
 		id = int(insertedId)
 		err = e
 	} else { // Update
-		_, err = language.stmt.Exec(language.Language, language.id)
-		id = language.id
+		_, err = language.stmt.Exec(language.Language, language.Id)
+		id = language.Id
 	}
 	return
 }
@@ -553,7 +555,7 @@ func (db Database) GetTopic(id int) (topic Topic, err error) {
 	if res, err = db.selectTopicStmt.Query(id); res != nil {
 		for res.Next() && err == nil {
 			topic.stmt = db.updateTopicStmt
-			err = res.Scan(&topic.id, &topic.Topic)
+			err = res.Scan(&topic.Id, &topic.Topic)
 		}
 	}
 	return
@@ -564,7 +566,7 @@ func (db Database) GetTopics() (topics []Topic, err error) {
 	if res, err = db.selectTopicsStmt.Query(); res != nil {
 		for res.Next() && err == nil {
 			topic := Topic{stmt: db.updateTopicStmt}
-			err = res.Scan(&topic.id, &topic.Topic)
+			err = res.Scan(&topic.Id, &topic.Topic)
 			topics = append(topics, topic)
 		}
 	}
@@ -579,18 +581,18 @@ func (db Database) RelatedBooksOfTopic(id int) (books []Book, err error) {
 			book.Language.stmt = db.updateLanguageStmt
 			book.Author.stmt = db.updateAuthorStmt
 			book.Topic.stmt = db.updateTopicStmt
-			err = res.Scan(&book.id,
-				&book.Author.id,
-				&book.Topic.id,
+			err = res.Scan(&book.Id,
+				&book.Author.Id,
+				&book.Topic.Id,
 				&book.ISBN,
 				&book.Title,
-				&book.Language.id,
+				&book.Language.Id,
 				&book.ReleaseDate,
-				&book.Author.id,
+				&book.Author.Id,
 				&book.Author.Name,
-				&book.Topic.id,
+				&book.Topic.Id,
 				&book.Topic.Topic,
-				&book.Language.id,
+				&book.Language.Id,
 				&book.Language.Language)
 			books = append(books, book)
 		}
@@ -607,23 +609,23 @@ func (db Database) RelatedQuotesOfTopic(id int) (quotes []Quote, err error) {
 			quote.Book.Author.stmt = db.updateAuthorStmt
 			quote.Book.Topic.stmt = db.updateTopicStmt
 			quote.Book.Language.stmt = db.updateLanguageStmt
-			err = res.Scan(&quote.id,
-				&quote.Book.id,
+			err = res.Scan(&quote.Id,
+				&quote.Book.Id,
 				&quote.Quote,
 				&quote.Page,
 				&quote.RecordDate,
-				&quote.Book.id,
-				&quote.Book.Author.id,
-				&quote.Book.Topic.id,
+				&quote.Book.Id,
+				&quote.Book.Author.Id,
+				&quote.Book.Topic.Id,
 				&quote.Book.ISBN,
 				&quote.Book.Title,
-				&quote.Book.Language.id,
+				&quote.Book.Language.Id,
 				&quote.Book.ReleaseDate,
-				&quote.Book.Author.id,
+				&quote.Book.Author.Id,
 				&quote.Book.Author.Name,
-				&quote.Book.Topic.id,
+				&quote.Book.Topic.Id,
 				&quote.Book.Topic.Topic,
-				&quote.Book.Language.id,
+				&quote.Book.Language.Id,
 				&quote.Book.Language.Language)
 			quotes = append(quotes, quote)
 		}
@@ -636,7 +638,7 @@ func (db Database) SearchTopics(search string) (topics []Topic, err error) {
 	if res, err = db.searchTopicsStmt.Query("%" + search + "%"); res != nil {
 		for res.Next() && err == nil {
 			topic := Topic{stmt: db.updateTopicStmt}
-			err = res.Scan(&topic.id, &topic.Topic)
+			err = res.Scan(&topic.Id, &topic.Topic)
 			topics = append(topics, topic)
 		}
 	}
@@ -648,7 +650,7 @@ func (db Database) GetAuthor(id int) (author Author, err error) {
 	if res, err = db.selectAuthorStmt.Query(id); res != nil {
 		for res.Next() && err == nil {
 			author.stmt = db.updateAuthorStmt
-			err = res.Scan(&author.id, &author.Name)
+			err = res.Scan(&author.Id, &author.Name)
 		}
 	}
 	return
@@ -659,7 +661,7 @@ func (db Database) GetAuthors() (authors []Author, err error) {
 	if res, err = db.selectAuthorsStmt.Query(); res != nil {
 		for res.Next() && err == nil {
 			author := Author{stmt: db.updateAuthorStmt}
-			err = res.Scan(&author.id, &author.Name)
+			err = res.Scan(&author.Id, &author.Name)
 			authors = append(authors, author)
 		}
 	}
@@ -674,18 +676,18 @@ func (db Database) RelatedBooksOfAuthor(id int) (books []Book, err error) {
 			book.Language.stmt = db.updateLanguageStmt
 			book.Author.stmt = db.updateAuthorStmt
 			book.Topic.stmt = db.updateTopicStmt
-			err = res.Scan(&book.id,
-				&book.Author.id,
-				&book.Topic.id,
+			err = res.Scan(&book.Id,
+				&book.Author.Id,
+				&book.Topic.Id,
 				&book.ISBN,
 				&book.Title,
-				&book.Language.id,
+				&book.Language.Id,
 				&book.ReleaseDate,
-				&book.Author.id,
+				&book.Author.Id,
 				&book.Author.Name,
-				&book.Topic.id,
+				&book.Topic.Id,
 				&book.Topic.Topic,
-				&book.Language.id,
+				&book.Language.Id,
 				&book.Language.Language)
 			books = append(books, book)
 		}
@@ -702,23 +704,23 @@ func (db Database) RelatedQuotesOfAuthor(id int) (quotes []Quote, err error) {
 			quote.Book.Author.stmt = db.updateAuthorStmt
 			quote.Book.Topic.stmt = db.updateTopicStmt
 			quote.Book.Language.stmt = db.updateLanguageStmt
-			err = res.Scan(&quote.id,
-				&quote.Book.id,
+			err = res.Scan(&quote.Id,
+				&quote.Book.Id,
 				&quote.Quote,
 				&quote.Page,
 				&quote.RecordDate,
-				&quote.Book.id,
-				&quote.Book.Author.id,
-				&quote.Book.Topic.id,
+				&quote.Book.Id,
+				&quote.Book.Author.Id,
+				&quote.Book.Topic.Id,
 				&quote.Book.ISBN,
 				&quote.Book.Title,
-				&quote.Book.Language.id,
+				&quote.Book.Language.Id,
 				&quote.Book.ReleaseDate,
-				&quote.Book.Author.id,
+				&quote.Book.Author.Id,
 				&quote.Book.Author.Name,
-				&quote.Book.Topic.id,
+				&quote.Book.Topic.Id,
 				&quote.Book.Topic.Topic,
-				&quote.Book.Language.id,
+				&quote.Book.Language.Id,
 				&quote.Book.Language.Language)
 			quotes = append(quotes, quote)
 		}
@@ -731,7 +733,7 @@ func (db Database) SearchAuthors(search string) (authors []Author, err error) {
 	if res, err = db.searchAuthorsStmt.Query("%" + search + "%"); res != nil {
 		for res.Next() && err == nil {
 			author := Author{stmt: db.updateAuthorStmt}
-			err = res.Scan(&author.id, &author.Name)
+			err = res.Scan(&author.Id, &author.Name)
 			authors = append(authors, author)
 		}
 	}
@@ -743,7 +745,7 @@ func (db Database) GetLanguage(id int) (language Language, err error) {
 	if res, err = db.selectLanguageStmt.Query(id); res != nil {
 		for res.Next() && err == nil {
 			language.stmt = db.updateLanguageStmt
-			err = res.Scan(&language.id, &language.Language)
+			err = res.Scan(&language.Id, &language.Language)
 		}
 	}
 	return
@@ -754,7 +756,7 @@ func (db Database) GetLanguages() (languages []Language, err error) {
 	if res, err = db.selectLanguagesStmt.Query(); res != nil {
 		for res.Next() && err == nil {
 			language := Language{stmt: db.updateLanguageStmt}
-			err = res.Scan(&language.id, &language.Language)
+			err = res.Scan(&language.Id, &language.Language)
 			languages = append(languages, language)
 		}
 	}
@@ -769,18 +771,18 @@ func (db Database) RelatedBooksOfLanguage(id int) (books []Book, err error) {
 			book.Language.stmt = db.updateLanguageStmt
 			book.Author.stmt = db.updateAuthorStmt
 			book.Topic.stmt = db.updateTopicStmt
-			err = res.Scan(&book.id,
-				&book.Author.id,
-				&book.Topic.id,
+			err = res.Scan(&book.Id,
+				&book.Author.Id,
+				&book.Topic.Id,
 				&book.ISBN,
 				&book.Title,
-				&book.Language.id,
+				&book.Language.Id,
 				&book.ReleaseDate,
-				&book.Author.id,
+				&book.Author.Id,
 				&book.Author.Name,
-				&book.Topic.id,
+				&book.Topic.Id,
 				&book.Topic.Topic,
-				&book.Language.id,
+				&book.Language.Id,
 				&book.Language.Language)
 			books = append(books, book)
 		}
@@ -797,23 +799,23 @@ func (db Database) RelatedQuotesOfLanguage(id int) (quotes []Quote, err error) {
 			quote.Book.Author.stmt = db.updateAuthorStmt
 			quote.Book.Topic.stmt = db.updateTopicStmt
 			quote.Book.Language.stmt = db.updateLanguageStmt
-			err = res.Scan(&quote.id,
-				&quote.Book.id,
+			err = res.Scan(&quote.Id,
+				&quote.Book.Id,
 				&quote.Quote,
 				&quote.Page,
 				&quote.RecordDate,
-				&quote.Book.id,
-				&quote.Book.Author.id,
-				&quote.Book.Topic.id,
+				&quote.Book.Id,
+				&quote.Book.Author.Id,
+				&quote.Book.Topic.Id,
 				&quote.Book.ISBN,
 				&quote.Book.Title,
-				&quote.Book.Language.id,
+				&quote.Book.Language.Id,
 				&quote.Book.ReleaseDate,
-				&quote.Book.Author.id,
+				&quote.Book.Author.Id,
 				&quote.Book.Author.Name,
-				&quote.Book.Topic.id,
+				&quote.Book.Topic.Id,
 				&quote.Book.Topic.Topic,
-				&quote.Book.Language.id,
+				&quote.Book.Language.Id,
 				&quote.Book.Language.Language)
 			quotes = append(quotes, quote)
 		}
@@ -826,7 +828,7 @@ func (db Database) SearchLanguages(search string) (languages []Language, err err
 	if res, err = db.searchLanguagesStmt.Query("%" + search + "%"); res != nil {
 		for res.Next() && err == nil {
 			language := Language{stmt: db.updateLanguageStmt}
-			err = res.Scan(&language.id, &language.Language)
+			err = res.Scan(&language.Id, &language.Language)
 			languages = append(languages, language)
 		}
 	}
@@ -841,18 +843,18 @@ func (db Database) GetBook(id int) (book Book, err error) {
 			book.Language.stmt = db.updateLanguageStmt
 			book.Author.stmt = db.updateAuthorStmt
 			book.Topic.stmt = db.updateTopicStmt
-			err = res.Scan(&book.id,
-				&book.Author.id,
-				&book.Topic.id,
+			err = res.Scan(&book.Id,
+				&book.Author.Id,
+				&book.Topic.Id,
 				&book.ISBN,
 				&book.Title,
-				&book.Language.id,
+				&book.Language.Id,
 				&book.ReleaseDate,
-				&book.Author.id,
+				&book.Author.Id,
 				&book.Author.Name,
-				&book.Topic.id,
+				&book.Topic.Id,
 				&book.Topic.Topic,
-				&book.Language.id,
+				&book.Language.Id,
 				&book.Language.Language)
 		}
 	}
@@ -867,18 +869,18 @@ func (db Database) GetBooks() (books []Book, err error) {
 			book.Language.stmt = db.updateLanguageStmt
 			book.Author.stmt = db.updateAuthorStmt
 			book.Topic.stmt = db.updateTopicStmt
-			err = res.Scan(&book.id,
-				&book.Author.id,
-				&book.Topic.id,
+			err = res.Scan(&book.Id,
+				&book.Author.Id,
+				&book.Topic.Id,
 				&book.ISBN,
 				&book.Title,
-				&book.Language.id,
+				&book.Language.Id,
 				&book.ReleaseDate,
-				&book.Author.id,
+				&book.Author.Id,
 				&book.Author.Name,
-				&book.Topic.id,
+				&book.Topic.Id,
 				&book.Topic.Topic,
-				&book.Language.id,
+				&book.Language.Id,
 				&book.Language.Language)
 			books = append(books, book)
 		}
@@ -895,23 +897,23 @@ func (db Database) RelatedQuotesOfBook(id int) (quotes []Quote, err error) {
 			quote.Book.Author.stmt = db.updateAuthorStmt
 			quote.Book.Topic.stmt = db.updateTopicStmt
 			quote.Book.Language.stmt = db.updateLanguageStmt
-			err = res.Scan(&quote.id,
-				&quote.Book.id,
+			err = res.Scan(&quote.Id,
+				&quote.Book.Id,
 				&quote.Quote,
 				&quote.Page,
 				&quote.RecordDate,
-				&quote.Book.id,
-				&quote.Book.Author.id,
-				&quote.Book.Topic.id,
+				&quote.Book.Id,
+				&quote.Book.Author.Id,
+				&quote.Book.Topic.Id,
 				&quote.Book.ISBN,
 				&quote.Book.Title,
-				&quote.Book.Language.id,
+				&quote.Book.Language.Id,
 				&quote.Book.ReleaseDate,
-				&quote.Book.Author.id,
+				&quote.Book.Author.Id,
 				&quote.Book.Author.Name,
-				&quote.Book.Topic.id,
+				&quote.Book.Topic.Id,
 				&quote.Book.Topic.Topic,
-				&quote.Book.Language.id,
+				&quote.Book.Language.Id,
 				&quote.Book.Language.Language)
 			quotes = append(quotes, quote)
 		}
@@ -927,18 +929,18 @@ func (db Database) SearchBooks(search string) (books []Book, err error) {
 			book.Language.stmt = db.updateLanguageStmt
 			book.Author.stmt = db.updateAuthorStmt
 			book.Topic.stmt = db.updateTopicStmt
-			err = res.Scan(&book.id,
-				&book.Author.id,
-				&book.Topic.id,
+			err = res.Scan(&book.Id,
+				&book.Author.Id,
+				&book.Topic.Id,
 				&book.ISBN,
 				&book.Title,
-				&book.Language.id,
+				&book.Language.Id,
 				&book.ReleaseDate,
-				&book.Author.id,
+				&book.Author.Id,
 				&book.Author.Name,
-				&book.Topic.id,
+				&book.Topic.Id,
 				&book.Topic.Topic,
-				&book.Language.id,
+				&book.Language.Id,
 				&book.Language.Language)
 			books = append(books, book)
 		}
@@ -955,23 +957,23 @@ func (db Database) GetQuote(id int) (quote Quote, err error) {
 			quote.Book.Author.stmt = db.updateAuthorStmt
 			quote.Book.Topic.stmt = db.updateTopicStmt
 			quote.Book.Language.stmt = db.updateLanguageStmt
-			err = res.Scan(&quote.id,
-				&quote.Book.id,
+			err = res.Scan(&quote.Id,
+				&quote.Book.Id,
 				&quote.Quote,
 				&quote.Page,
 				&quote.RecordDate,
-				&quote.Book.id,
-				&quote.Book.Author.id,
-				&quote.Book.Topic.id,
+				&quote.Book.Id,
+				&quote.Book.Author.Id,
+				&quote.Book.Topic.Id,
 				&quote.Book.ISBN,
 				&quote.Book.Title,
-				&quote.Book.Language.id,
+				&quote.Book.Language.Id,
 				&quote.Book.ReleaseDate,
-				&quote.Book.Author.id,
+				&quote.Book.Author.Id,
 				&quote.Book.Author.Name,
-				&quote.Book.Topic.id,
+				&quote.Book.Topic.Id,
 				&quote.Book.Topic.Topic,
-				&quote.Book.Language.id,
+				&quote.Book.Language.Id,
 				&quote.Book.Language.Language)
 		}
 	}
@@ -987,23 +989,23 @@ func (db Database) GetQuotes() (quotes []Quote, err error) {
 			quote.Book.Author.stmt = db.updateAuthorStmt
 			quote.Book.Topic.stmt = db.updateTopicStmt
 			quote.Book.Language.stmt = db.updateLanguageStmt
-			err = res.Scan(&quote.id,
-				&quote.Book.id,
+			err = res.Scan(&quote.Id,
+				&quote.Book.Id,
 				&quote.Quote,
 				&quote.Page,
 				&quote.RecordDate,
-				&quote.Book.id,
-				&quote.Book.Author.id,
-				&quote.Book.Topic.id,
+				&quote.Book.Id,
+				&quote.Book.Author.Id,
+				&quote.Book.Topic.Id,
 				&quote.Book.ISBN,
 				&quote.Book.Title,
-				&quote.Book.Language.id,
+				&quote.Book.Language.Id,
 				&quote.Book.ReleaseDate,
-				&quote.Book.Author.id,
+				&quote.Book.Author.Id,
 				&quote.Book.Author.Name,
-				&quote.Book.Topic.id,
+				&quote.Book.Topic.Id,
 				&quote.Book.Topic.Topic,
-				&quote.Book.Language.id,
+				&quote.Book.Language.Id,
 				&quote.Book.Language.Language)
 			quotes = append(quotes, quote)
 		}
@@ -1020,23 +1022,23 @@ func (db Database) SearchQuotes(search string) (quotes []Quote, err error) {
 			quote.Book.Author.stmt = db.updateAuthorStmt
 			quote.Book.Topic.stmt = db.updateTopicStmt
 			quote.Book.Language.stmt = db.updateLanguageStmt
-			err = res.Scan(&quote.id,
-				&quote.Book.id,
+			err = res.Scan(&quote.Id,
+				&quote.Book.Id,
 				&quote.Quote,
 				&quote.Page,
 				&quote.RecordDate,
-				&quote.Book.id,
-				&quote.Book.Author.id,
-				&quote.Book.Topic.id,
+				&quote.Book.Id,
+				&quote.Book.Author.Id,
+				&quote.Book.Topic.Id,
 				&quote.Book.ISBN,
 				&quote.Book.Title,
-				&quote.Book.Language.id,
+				&quote.Book.Language.Id,
 				&quote.Book.ReleaseDate,
-				&quote.Book.Author.id,
+				&quote.Book.Author.Id,
 				&quote.Book.Author.Name,
-				&quote.Book.Topic.id,
+				&quote.Book.Topic.Id,
 				&quote.Book.Topic.Topic,
-				&quote.Book.Language.id,
+				&quote.Book.Language.Id,
 				&quote.Book.Language.Language)
 			quotes = append(quotes, quote)
 		}

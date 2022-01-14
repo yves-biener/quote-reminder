@@ -270,7 +270,7 @@ func TestPostTopic(t *testing.T) {
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	expectedBody := `{"id": 3}`
+	expectedBody := `{"Id": 3}`
 	actualBody := responseRecord.Body.String()
 	if actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
