@@ -12,8 +12,8 @@ const (
 	testDatabase   = "./cur_test.sqlite"
 	stmtError      = "wrong stmt on dao:\nexpected: %v\nactual: %v\n"
 	lenError       = "wrong amount of daos:\nexpected: %d\nactual: %d\n"
-	idError        = "wrong id of dao:\nexpected: %d\nactual: %d\n"
-	insertionError = "commiting new dao returned unexpected id\nexpected: %d\n got: %d\n"
+	idError        = "wrong Id of dao:\nexpected: %d\nactual: %d\n"
+	insertionError = "commiting new dao returned unexpected Id\nexpected: %d\n got: %d\n"
 	contentError   = "content had not the expected value\nexpected: %v\n actual: %v\n"
 )
 
@@ -118,7 +118,7 @@ func TestGetNonExistingTopic(t *testing.T) {
 	}
 	defaultTopic := Topic{}
 	if topic != defaultTopic {
-		t.Fatal("Got non default topic for non existing topic id")
+		t.Fatal("Got non default topic for non existing topic Id")
 	}
 }
 
@@ -142,7 +142,7 @@ func TestGetExistingTopic(t *testing.T) {
 	if actualStmt != expectedStmt {
 		t.Fatalf(stmtError, expectedStmt, actualStmt)
 	}
-	actualId := topic.id
+	actualId := topic.Id
 	if actualId != expectedId {
 		t.Fatalf(idError, expectedId, actualId)
 	}
@@ -199,7 +199,7 @@ func TestRelatedBooksOfExistingTopic(t *testing.T) {
 		if actualContent != expectedContent {
 			t.Fatalf(contentError, expectedContent, actualContent)
 		}
-		actualId := book.id
+		actualId := book.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -207,7 +207,7 @@ func TestRelatedBooksOfExistingTopic(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = book.Topic.id
+		actualId = book.Topic.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -221,7 +221,7 @@ func TestRelatedBooksOfExistingTopic(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = book.Author.id
+		actualId = book.Author.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -235,7 +235,7 @@ func TestRelatedBooksOfExistingTopic(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = book.Language.id
+		actualId = book.Language.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -303,7 +303,7 @@ func TestRelatedQuotesOfExistingTopic(t *testing.T) {
 		if actualContent != expectedContent {
 			t.Fatalf(contentError, expectedContent, actualContent)
 		}
-		actualId := quote.id
+		actualId := quote.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -311,7 +311,7 @@ func TestRelatedQuotesOfExistingTopic(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = quote.Book.Topic.id
+		actualId = quote.Book.Topic.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -325,7 +325,7 @@ func TestRelatedQuotesOfExistingTopic(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = quote.Book.Author.id
+		actualId = quote.Book.Author.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -339,7 +339,7 @@ func TestRelatedQuotesOfExistingTopic(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = quote.Book.Language.id
+		actualId = quote.Book.Language.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -464,7 +464,7 @@ func TestGetNonExistingAuthor(t *testing.T) {
 	}
 	defaultAuthor := Author{}
 	if author != defaultAuthor {
-		t.Fatal("Got non default author for non existing author id")
+		t.Fatal("Got non default author for non existing author Id")
 	}
 }
 
@@ -488,7 +488,7 @@ func TestGetExistingAuthor(t *testing.T) {
 	if actualStmt != expectedStmt {
 		t.Fatalf(stmtError, expectedStmt, actualStmt)
 	}
-	actualId := author.id
+	actualId := author.Id
 	if actualId != expectedId {
 		t.Fatalf(idError, expectedId, actualId)
 	}
@@ -545,7 +545,7 @@ func TestRelatedBooksOfExistingAuthor(t *testing.T) {
 		if actualContent != expectedContent {
 			t.Fatalf(contentError, expectedContent, actualContent)
 		}
-		actualId := book.id
+		actualId := book.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -553,7 +553,7 @@ func TestRelatedBooksOfExistingAuthor(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = book.Topic.id
+		actualId = book.Topic.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -567,7 +567,7 @@ func TestRelatedBooksOfExistingAuthor(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = book.Author.id
+		actualId = book.Author.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -581,7 +581,7 @@ func TestRelatedBooksOfExistingAuthor(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = book.Language.id
+		actualId = book.Language.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -649,7 +649,7 @@ func TestRelatedQuotesOfExistingAuthor(t *testing.T) {
 		if actualContent != expectedContent {
 			t.Fatalf(contentError, expectedContent, actualContent)
 		}
-		actualId := quote.id
+		actualId := quote.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -657,7 +657,7 @@ func TestRelatedQuotesOfExistingAuthor(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = quote.Book.Topic.id
+		actualId = quote.Book.Topic.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -671,7 +671,7 @@ func TestRelatedQuotesOfExistingAuthor(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = quote.Book.Author.id
+		actualId = quote.Book.Author.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -685,7 +685,7 @@ func TestRelatedQuotesOfExistingAuthor(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = quote.Book.Language.id
+		actualId = quote.Book.Language.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -810,7 +810,7 @@ func TestGetNonExistingLanguage(t *testing.T) {
 	}
 	defaultLanguage := Language{}
 	if language != defaultLanguage {
-		t.Fatal("Got non default language for non existing language id")
+		t.Fatal("Got non default language for non existing language Id")
 	}
 }
 
@@ -834,7 +834,7 @@ func TestGetExistingLanguage(t *testing.T) {
 	if actualStmt != expectedStmt {
 		t.Fatalf(stmtError, expectedStmt, actualStmt)
 	}
-	actualId := language.id
+	actualId := language.Id
 	if actualId != expectedId {
 		t.Fatalf(idError, expectedId, actualId)
 	}
@@ -891,7 +891,7 @@ func TestRelatedBooksOfExistingLanguage(t *testing.T) {
 		if actualContent != expectedContent {
 			t.Fatalf(contentError, expectedContent, actualContent)
 		}
-		actualId := book.id
+		actualId := book.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -899,7 +899,7 @@ func TestRelatedBooksOfExistingLanguage(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = book.Topic.id
+		actualId = book.Topic.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -913,7 +913,7 @@ func TestRelatedBooksOfExistingLanguage(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = book.Author.id
+		actualId = book.Author.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -927,7 +927,7 @@ func TestRelatedBooksOfExistingLanguage(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = book.Language.id
+		actualId = book.Language.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -995,7 +995,7 @@ func TestRelatedQuotesOfExistingLanguage(t *testing.T) {
 		if actualContent != expectedContent {
 			t.Fatalf(contentError, expectedContent, actualContent)
 		}
-		actualId := quote.id
+		actualId := quote.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -1003,7 +1003,7 @@ func TestRelatedQuotesOfExistingLanguage(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = quote.Book.Topic.id
+		actualId = quote.Book.Topic.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -1017,7 +1017,7 @@ func TestRelatedQuotesOfExistingLanguage(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = quote.Book.Author.id
+		actualId = quote.Book.Author.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -1031,7 +1031,7 @@ func TestRelatedQuotesOfExistingLanguage(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = quote.Book.Language.id
+		actualId = quote.Book.Language.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -1107,19 +1107,19 @@ func TestGetBooks(t *testing.T) {
 			t.Fatalf("ISBN was empty, the value should be not null")
 		}
 		expectedId := i + 1
-		actualId := book.id
+		actualId := book.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
-		actualId = book.Author.id
+		actualId = book.Author.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
-		actualId = book.Topic.id
+		actualId = book.Topic.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
-		actualId = book.Language.id
+		actualId = book.Language.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -1177,7 +1177,7 @@ func TestGetNonExistingBook(t *testing.T) {
 	}
 	defaultBook := Book{}
 	if book != defaultBook {
-		t.Fatal("Got non default book for non existing book id")
+		t.Fatal("Got non default book for non existing book Id")
 	}
 }
 
@@ -1201,7 +1201,7 @@ func TestGetExistingBook(t *testing.T) {
 	if actualStmt != expectedStmt {
 		t.Fatalf(stmtError, expectedStmt, actualStmt)
 	}
-	actualId := book.id
+	actualId := book.Id
 	if actualId != expectedId {
 		t.Fatalf(idError, expectedId, actualId)
 	}
@@ -1263,7 +1263,7 @@ func TestRelatedQuotesOfExistingBook(t *testing.T) {
 		if actualContent != expectedContent {
 			t.Fatalf(contentError, expectedContent, actualContent)
 		}
-		actualId := quote.id
+		actualId := quote.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -1271,7 +1271,7 @@ func TestRelatedQuotesOfExistingBook(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = quote.Book.Topic.id
+		actualId = quote.Book.Topic.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -1285,7 +1285,7 @@ func TestRelatedQuotesOfExistingBook(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = quote.Book.Author.id
+		actualId = quote.Book.Author.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -1299,7 +1299,7 @@ func TestRelatedQuotesOfExistingBook(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = quote.Book.Language.id
+		actualId = quote.Book.Language.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -1390,11 +1390,11 @@ func TestGetQuotes(t *testing.T) {
 		if actualContent != expectedContent {
 			t.Fatalf(contentError, expectedContent, actualContent)
 		}
-		actualId := quote.id
+		actualId := quote.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
-		actualId = quote.Book.Topic.id
+		actualId = quote.Book.Topic.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -1408,7 +1408,7 @@ func TestGetQuotes(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = quote.Book.Author.id
+		actualId = quote.Book.Author.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -1422,7 +1422,7 @@ func TestGetQuotes(t *testing.T) {
 		if actualStmt != expectedStmt {
 			t.Fatalf(stmtError, expectedStmt, actualStmt)
 		}
-		actualId = quote.Book.Language.id
+		actualId = quote.Book.Language.Id
 		if actualId != expectedId {
 			t.Fatalf(idError, expectedId, actualId)
 		}
@@ -1490,7 +1490,7 @@ func TestGetNonExistingQuote(t *testing.T) {
 	}
 	defaultQuote := Quote{}
 	if quote != defaultQuote {
-		t.Fatal("Got non default quote for non existing quote id")
+		t.Fatal("Got non default quote for non existing quote Id")
 	}
 }
 
@@ -1514,7 +1514,7 @@ func TestGetExistingQuote(t *testing.T) {
 	if actualStmt != expectedStmt {
 		t.Fatalf(stmtError, expectedStmt, actualStmt)
 	}
-	actualId := quote.id
+	actualId := quote.Id
 	if actualId != expectedId {
 		t.Fatalf(idError, expectedId, actualId)
 	}
