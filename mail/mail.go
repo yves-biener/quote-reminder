@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/smtp"
 	db "quote/db"
+	"strings"
 	"time"
 )
 
@@ -18,20 +19,32 @@ type Config struct {
 
 func (c Config) sendMail(quotes []db.Quote) (err error) {
 	auth := smtp.PlainAuth("", c.Sender, c.Password, c.SmtpHost)
-	err = smtp.SendMail(c.SmtpHost+":"+string(c.SmtpHost),
-		auth, c.Sender, c.Receiver, []byte(message(quotes)))
+	err = smtp.SendMail(fmt.Sprintf("%s:%d", c.SmtpHost, c.SmtpPort),
+		auth, c.Sender, c.Receiver, []byte(c.message(quotes)))
+	return
+}
+
+func (c Config) message(quotes []db.Quote) (message string) {
+	// Set header
+	message += fmt.Sprintf("From: %s\r\n", c.Sender)
+	message += fmt.Sprintf("To: %s\r\n", strings.Join(c.Receiver, " "))
+	message += "Subject: Quote-reminder\r\n\r\n"
+	// Set body
+	for _, quote := range quotes {
+		message += fmt.Sprintf("'%s' from '%s' by %s\n",
+			quote.Quote, quote.Book.Title, quote.Book.Author.Name)
+	}
 	return
 }
 
 func selectQuotes(database *db.Database) (quotes []db.Quote) {
-
-	return
-}
-
-func message(quotes []db.Quote) (message string) {
-	for _, quote := range quotes {
-		message += fmt.Sprintf(`"%s" from "%s" by %s\n`,
-			quote.Quote, quote.Book.Title, quote.Book.Author.Name)
+	var err error
+	quotes, err = database.GetQuotes()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if cap(quotes) > 5 {
+		quotes = quotes[:5]
 	}
 	return
 }
