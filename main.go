@@ -15,19 +15,25 @@ const (
 )
 
 func main() {
+	// connect to local database
 	database, err := db.Connect(dbFilename)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer database.Close()
 
+	// read mail service configuration
 	configJson, err := ioutil.ReadFile(configFilename)
 	if err != nil {
 		log.Fatal(err)
 	}
 	config := mail.Config{}
 	err = json.Unmarshal([]byte(configJson), &config)
-	go mail.Service(database, config)
+	if err != nil {
+		log.Fatal(err)
+	}
 
+	// start both services
+	go mail.Service(database, config)
 	api.RunServer(database)
 }
