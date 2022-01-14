@@ -50,7 +50,7 @@ func selectQuotes(database *db.Database) (selection []db.Quote) {
 }
 
 func Service(database *db.Database, config Config) {
-	for _ = range time.Tick(time.Hour * 24) {
+	for range time.Tick(time.Hour * 24) {
 		err := config.sendMail(selectQuotes(database))
 		if err != nil {
 			log.Fatal(err)
