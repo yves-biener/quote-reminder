@@ -11,11 +11,11 @@ import (
 )
 
 type Config struct {
-	Sender   string   `json: "sender"`
-	Password string   `json: "password"`
-	Receiver []string `json: "receiver"`
-	SmtpHost string   `json: "smtpHost"`
-	SmtpPort int      `json: "smtpPort"`
+	Sender   string
+	Password string
+	Receiver []string
+	SmtpHost string
+	SmtpPort int
 }
 
 func (c Config) sendMail(quotes []db.Quote) (err error) {
