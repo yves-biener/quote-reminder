@@ -3,6 +3,7 @@ package quote
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"net/smtp"
 	db "quote/db"
 	"strings"
@@ -37,14 +38,13 @@ func (c Config) message(quotes []db.Quote) (message string) {
 	return
 }
 
-func selectQuotes(database *db.Database) (quotes []db.Quote) {
-	var err error
-	quotes, err = database.GetQuotes()
+func selectQuotes(database *db.Database) (selection []db.Quote) {
+	quotes, err := database.GetQuotes()
 	if err != nil {
 		log.Fatal(err)
 	}
-	if cap(quotes) > 5 {
-		quotes = quotes[:5]
+	for i := 0; i < 5; i += 1 {
+		selection = append(selection, quotes[rand.Intn(len(quotes))])
 	}
 	return
 }
