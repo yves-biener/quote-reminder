@@ -1,12 +1,17 @@
 package quote
 
 import (
+	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	db "quote/db"
+	"strings"
 	"testing"
+
+	"github.com/gorilla/mux"
 )
 
 const (
@@ -58,7 +63,7 @@ func TestHelp(t *testing.T) {
 func TestGetTopics(t *testing.T) {
 	// Arrange
 	initDatabase(t)
-	req, err := http.NewRequest(Get, "/topics", nil)
+	req, err := http.NewRequest(Get, "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,19 +76,33 @@ func TestGetTopics(t *testing.T) {
 	handlerUnderTest := http.HandlerFunc(getTopics)
 	// Act
 	handlerUnderTest.ServeHTTP(responseRecord, req)
-
 	// Assert
 	expectedStatus := http.StatusOK
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	// TODO: Check response body
+	expectedTopics, err := database.GetTopics()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var expectedJson []string
+	for _, topic := range expectedTopics {
+		jsonTopic, err := json.Marshal(topic)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expectedJson = append(expectedJson, string(jsonTopic))
+	}
+	expectedBody := fmt.Sprintf("[%s]", strings.Join(expectedJson, ","))
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
 }
 
 func TestSearchTopics(t *testing.T) {
 	// Arrange
 	initDatabase(t)
-	req, err := http.NewRequest(Get, "/topics?q=te st", nil)
+	req, err := http.NewRequest(Get, "/?q=Topic", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,22 +112,37 @@ func TestSearchTopics(t *testing.T) {
 	}
 	defer database.Close()
 	responseRecord := httptest.NewRecorder()
-	handlerUnderTest := http.HandlerFunc(searchTopics)
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", searchTopics).Queries("q", "{search}")
 	// Act
-	handlerUnderTest.ServeHTTP(responseRecord, req)
-
+	routerUnderTest.ServeHTTP(responseRecord, req)
 	// Assert
 	expectedStatus := http.StatusOK
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	// TODO: Check response body
+	expectedTopics, err := database.GetTopics()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var expectedJson []string
+	for _, topic := range expectedTopics {
+		jsonTopic, err := json.Marshal(topic)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expectedJson = append(expectedJson, string(jsonTopic))
+	}
+	expectedBody := fmt.Sprintf("[%s]", strings.Join(expectedJson, ","))
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
 }
 
 func TestGetTopicOfUnknownId(t *testing.T) {
 	// Arrange
 	initDatabase(t)
-	req, err := http.NewRequest(Get, "/topics/69", nil)
+	req, err := http.NewRequest(Get, "/69", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -118,22 +152,26 @@ func TestGetTopicOfUnknownId(t *testing.T) {
 	}
 	defer database.Close()
 	responseRecord := httptest.NewRecorder()
-	handlerUnderTest := http.HandlerFunc(getTopic)
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}", getTopic)
 	// Act
-	handlerUnderTest.ServeHTTP(responseRecord, req)
-
+	routerUnderTest.ServeHTTP(responseRecord, req)
 	// Assert
 	expectedStatus := http.StatusOK
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	// TODO: Check response body
+	expectedBody := ""
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
 }
 
 func TestGetTopicOfKnownId(t *testing.T) {
 	// Arrange
 	initDatabase(t)
-	req, err := http.NewRequest(Get, "/topics/1", nil)
+	expectedId := 1
+	req, err := http.NewRequest(Get, fmt.Sprintf("/%d", expectedId), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,20 +181,32 @@ func TestGetTopicOfKnownId(t *testing.T) {
 	}
 	defer database.Close()
 	responseRecord := httptest.NewRecorder()
-	handlerUnderTest := http.HandlerFunc(getTopic)
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}", getTopic)
 	// Act
-	handlerUnderTest.ServeHTTP(responseRecord, req)
+	routerUnderTest.ServeHTTP(responseRecord, req)
 	// Assert
 	expectedStatus := http.StatusOK
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	// TODO: Check response body
+	expectedTopic, err := database.GetTopic(expectedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedJson, err := json.Marshal(expectedTopic)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedBody := string(expectedJson)
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
 }
 
 func TestGetRelatedBooksOfUnknownTopic(t *testing.T) {
 	// Arrange
-	req, err := http.NewRequest(Get, "/topics/69/books", nil)
+	req, err := http.NewRequest(Get, "/69/books", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -166,21 +216,26 @@ func TestGetRelatedBooksOfUnknownTopic(t *testing.T) {
 	}
 	defer database.Close()
 	responseRecord := httptest.NewRecorder()
-	handlerUnderTest := http.HandlerFunc(getRelatedBooksOfTopic)
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}/books", getRelatedBooksOfTopic)
 	// Act
-	handlerUnderTest.ServeHTTP(responseRecord, req)
+	routerUnderTest.ServeHTTP(responseRecord, req)
 	// Assert
 	expectedStatus := http.StatusOK
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	// TODO: Check response body
+	expectedBody := "[]"
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
 }
 
 func TestGetRelatedBooksOfKnownTopic(t *testing.T) {
 	// Arrange
 	initDatabase(t)
-	req, err := http.NewRequest(Get, "/topics/1/books", nil)
+	expectedId := 1
+	req, err := http.NewRequest(Get, fmt.Sprintf("/%d/books", expectedId), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -190,20 +245,32 @@ func TestGetRelatedBooksOfKnownTopic(t *testing.T) {
 	}
 	defer database.Close()
 	responseRecord := httptest.NewRecorder()
-	handlerUnderTest := http.HandlerFunc(getRelatedBooksOfTopic)
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}/books", getRelatedBooksOfTopic)
 	// Act
-	handlerUnderTest.ServeHTTP(responseRecord, req)
+	routerUnderTest.ServeHTTP(responseRecord, req)
 	// Assert
 	expectedStatus := http.StatusOK
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	// TODO: Check response body
+	expectedBook, err := database.GetBook(expectedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedJson, err := json.Marshal(expectedBook)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedBody := fmt.Sprintf("[%s]", string(expectedJson))
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
 }
 
 func TestGetRelatedQuotesOfUnknownTopic(t *testing.T) {
 	// Arrange
-	req, err := http.NewRequest(Get, "/topics/69/quotes", nil)
+	req, err := http.NewRequest(Get, "/69/quotes", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -213,21 +280,26 @@ func TestGetRelatedQuotesOfUnknownTopic(t *testing.T) {
 	}
 	defer database.Close()
 	responseRecord := httptest.NewRecorder()
-	handlerUnderTest := http.HandlerFunc(getRelatedQuotesOfTopic)
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}/quotes", getRelatedQuotesOfTopic)
 	// Act
-	handlerUnderTest.ServeHTTP(responseRecord, req)
+	routerUnderTest.ServeHTTP(responseRecord, req)
 	// Assert
 	expectedStatus := http.StatusOK
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	// TODO: Check response body
+	expectedBody := "[]"
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
 }
 
 func TestGetRelatedQuotesOfKnownTopic(t *testing.T) {
 	// Arrange
 	initDatabase(t)
-	req, err := http.NewRequest(Get, "/topics/1/quotes", nil)
+	expectedId := 1
+	req, err := http.NewRequest(Get, fmt.Sprintf("/%d/quotes", expectedId), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -237,22 +309,34 @@ func TestGetRelatedQuotesOfKnownTopic(t *testing.T) {
 	}
 	defer database.Close()
 	responseRecord := httptest.NewRecorder()
-	handlerUnderTest := http.HandlerFunc(getRelatedQuotesOfTopic)
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}/quotes", getRelatedQuotesOfTopic)
 	// Act
-	handlerUnderTest.ServeHTTP(responseRecord, req)
+	routerUnderTest.ServeHTTP(responseRecord, req)
 	// Assert
 	expectedStatus := http.StatusOK
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	// TODO: Check response body
+	expectedQuote, err := database.GetQuote(expectedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedJson, err := json.Marshal(expectedQuote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedBody := fmt.Sprintf("[%s]", string(expectedJson))
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
 }
 
+// TODO: add post form variables
 func TestPostTopic(t *testing.T) {
 	// Arrange
 	initDatabase(t)
-	// TODO: Check where I have to create the post message content
-	req, err := http.NewRequest(Post, "/topics", nil)
+	req, err := http.NewRequest(Post, "/", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -262,17 +346,1029 @@ func TestPostTopic(t *testing.T) {
 	}
 	defer database.Close()
 	responseRecord := httptest.NewRecorder()
-	handlerUnderTest := http.HandlerFunc(postTopic)
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", postTopic).Methods(Post)
 	// Act
-	handlerUnderTest.ServeHTTP(responseRecord, req)
+	routerUnderTest.ServeHTTP(responseRecord, req)
 	// Assert
 	expectedStatus := http.StatusCreated
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
 	expectedBody := `{"Id": 3}`
-	actualBody := responseRecord.Body.String()
-	if actualBody != expectedBody {
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetAuthors(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	req, err := http.NewRequest(Get, "", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	handlerUnderTest := http.HandlerFunc(getAuthors)
+	// Act
+	handlerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedAuthors, err := database.GetAuthors()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var expectedJson []string
+	for _, author := range expectedAuthors {
+		jsonAuthor, err := json.Marshal(author)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expectedJson = append(expectedJson, string(jsonAuthor))
+	}
+	expectedBody := fmt.Sprintf("[%s]", strings.Join(expectedJson, ","))
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestSearchAuthors(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	req, err := http.NewRequest(Get, "/?q=Author", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", searchAuthors).Queries("q", "{search}")
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedAuthors, err := database.GetAuthors()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var expectedJson []string
+	for _, author := range expectedAuthors {
+		jsonAuthor, err := json.Marshal(author)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expectedJson = append(expectedJson, string(jsonAuthor))
+	}
+	expectedBody := fmt.Sprintf("[%s]", strings.Join(expectedJson, ","))
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetAuthorOfUnknownId(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	req, err := http.NewRequest(Get, "/69", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}", getAuthor)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := ""
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetAuthorOfKnownId(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	expectedId := 1
+	req, err := http.NewRequest(Get, fmt.Sprintf("/%d", expectedId), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}", getAuthor)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedAuthor, err := database.GetAuthor(expectedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedJson, err := json.Marshal(expectedAuthor)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedBody := string(expectedJson)
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetRelatedBooksOfUnknownAuthor(t *testing.T) {
+	// Arrange
+	req, err := http.NewRequest(Get, "/69/books", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}/books", getRelatedBooksOfAuthor)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := "[]"
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetRelatedBooksOfKnownAuthor(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	expectedId := 1
+	req, err := http.NewRequest(Get, fmt.Sprintf("/%d/books", expectedId), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}/books", getRelatedBooksOfAuthor)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBook, err := database.GetBook(expectedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedJson, err := json.Marshal(expectedBook)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedBody := fmt.Sprintf("[%s]", string(expectedJson))
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetRelatedQuotesOfUnknownAuthor(t *testing.T) {
+	// Arrange
+	req, err := http.NewRequest(Get, "/69/quotes", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}/quotes", getRelatedQuotesOfAuthor)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := "[]"
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetRelatedQuotesOfKnownAuthor(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	expectedId := 1
+	req, err := http.NewRequest(Get, fmt.Sprintf("/%d/quotes", expectedId), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}/quotes", getRelatedQuotesOfAuthor)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedQuote, err := database.GetQuote(expectedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedJson, err := json.Marshal(expectedQuote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedBody := fmt.Sprintf("[%s]", string(expectedJson))
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+// TODO: add post form variables
+func TestPostAuthor(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	req, err := http.NewRequest(Post, "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", postAuthor).Methods(Post)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusCreated
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := `{"Id": 3}`
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetLanguages(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	req, err := http.NewRequest(Get, "", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	handlerUnderTest := http.HandlerFunc(getLanguages)
+	// Act
+	handlerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedLanguages, err := database.GetLanguages()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var expectedJson []string
+	for _, language := range expectedLanguages {
+		jsonLanguage, err := json.Marshal(language)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expectedJson = append(expectedJson, string(jsonLanguage))
+	}
+	expectedBody := fmt.Sprintf("[%s]", strings.Join(expectedJson, ","))
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestSearchLanguages(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	req, err := http.NewRequest(Get, "/?q=Language", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", searchLanguages).Queries("q", "{search}")
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedLanguages, err := database.GetLanguages()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var expectedJson []string
+	for _, language := range expectedLanguages {
+		jsonLanguage, err := json.Marshal(language)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expectedJson = append(expectedJson, string(jsonLanguage))
+	}
+	expectedBody := fmt.Sprintf("[%s]", strings.Join(expectedJson, ","))
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetLanguageOfUnknownId(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	req, err := http.NewRequest(Get, "/69", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}", getLanguage)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := ""
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetLanguageOfKnownId(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	expectedId := 1
+	req, err := http.NewRequest(Get, fmt.Sprintf("/%d", expectedId), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}", getLanguage)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedLanguage, err := database.GetLanguage(expectedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedJson, err := json.Marshal(expectedLanguage)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedBody := string(expectedJson)
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetRelatedBooksOfUnknownLanguage(t *testing.T) {
+	// Arrange
+	req, err := http.NewRequest(Get, "/69/books", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}/books", getRelatedBooksOfLanguage)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := "[]"
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetRelatedBooksOfKnownLanguage(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	expectedId := 1
+	req, err := http.NewRequest(Get, fmt.Sprintf("/%d/books", expectedId), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}/books", getRelatedBooksOfLanguage)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBook, err := database.GetBook(expectedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedJson, err := json.Marshal(expectedBook)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedBody := fmt.Sprintf("[%s]", string(expectedJson))
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetRelatedQuotesOfUnknownLanguage(t *testing.T) {
+	// Arrange
+	req, err := http.NewRequest(Get, "/69/quotes", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}/quotes", getRelatedQuotesOfLanguage)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := "[]"
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetRelatedQuotesOfKnownLanguage(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	expectedId := 1
+	req, err := http.NewRequest(Get, fmt.Sprintf("/%d/quotes", expectedId), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}/quotes", getRelatedQuotesOfLanguage)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedQuote, err := database.GetQuote(expectedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedJson, err := json.Marshal(expectedQuote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedBody := fmt.Sprintf("[%s]", string(expectedJson))
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+// TODO: add post form variables
+func TestPostLanguage(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	req, err := http.NewRequest(Post, "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", postLanguage).Methods(Post)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusCreated
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := `{"Id": 3}`
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetBooks(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	req, err := http.NewRequest(Get, "", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	handlerUnderTest := http.HandlerFunc(getBooks)
+	// Act
+	handlerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBooks, err := database.GetBooks()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var expectedJson []string
+	for _, book := range expectedBooks {
+		jsonBook, err := json.Marshal(book)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expectedJson = append(expectedJson, string(jsonBook))
+	}
+	expectedBody := fmt.Sprintf("[%s]", strings.Join(expectedJson, ","))
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestSearchBooks(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	req, err := http.NewRequest(Get, "/?q=Book", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", searchBooks).Queries("q", "{search}")
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBooks, err := database.GetBooks()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var expectedJson []string
+	for _, book := range expectedBooks {
+		jsonBook, err := json.Marshal(book)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expectedJson = append(expectedJson, string(jsonBook))
+	}
+	expectedBody := fmt.Sprintf("[%s]", strings.Join(expectedJson, ","))
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetBookOfUnknownId(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	req, err := http.NewRequest(Get, "/69", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}", getBook)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := ""
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetBookOfKnownId(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	expectedId := 1
+	req, err := http.NewRequest(Get, fmt.Sprintf("/%d", expectedId), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}", getBook)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBook, err := database.GetBook(expectedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedJson, err := json.Marshal(expectedBook)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedBody := string(expectedJson)
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetRelatedQuotesOfUnknownBook(t *testing.T) {
+	// Arrange
+	req, err := http.NewRequest(Get, "/69/quotes", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}/quotes", getRelatedQuotesOfBook)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := "[]"
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetRelatedQuotesOfKnownBook(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	expectedId := 1
+	req, err := http.NewRequest(Get, fmt.Sprintf("/%d/quotes", expectedId), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}/quotes", getRelatedQuotesOfBook)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedQuote, err := database.GetQuote(expectedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedJson, err := json.Marshal(expectedQuote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedBody := fmt.Sprintf("[%s]", string(expectedJson))
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+// TODO: add post form variables
+func TestPostBook(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	req, err := http.NewRequest(Post, "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", postBook).Methods(Post)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusCreated
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := `{"Id": 3}`
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetQuotes(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	req, err := http.NewRequest(Get, "", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	handlerUnderTest := http.HandlerFunc(getQuotes)
+	// Act
+	handlerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedQuotes, err := database.GetQuotes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var expectedJson []string
+	for _, quote := range expectedQuotes {
+		jsonQuote, err := json.Marshal(quote)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expectedJson = append(expectedJson, string(jsonQuote))
+	}
+	expectedBody := fmt.Sprintf("[%s]", strings.Join(expectedJson, ","))
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestSearchQuotes(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	req, err := http.NewRequest(Get, "/?q=Quote", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", searchQuotes).Queries("q", "{search}")
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedQuotes, err := database.GetQuotes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var expectedJson []string
+	for _, quote := range expectedQuotes {
+		jsonQuote, err := json.Marshal(quote)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expectedJson = append(expectedJson, string(jsonQuote))
+	}
+	expectedBody := fmt.Sprintf("[%s]", strings.Join(expectedJson, ","))
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetQuoteOfUnknownId(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	req, err := http.NewRequest(Get, "/69", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}", getQuote)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := ""
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestGetQuoteOfKnownId(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	expectedId := 1
+	req, err := http.NewRequest(Get, fmt.Sprintf("/%d", expectedId), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/{id}", getQuote)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedQuote, err := database.GetQuote(expectedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedJson, err := json.Marshal(expectedQuote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedBody := string(expectedJson)
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+// TODO: add post form variables
+func TestPostQuote(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	req, err := http.NewRequest(Post, "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", postQuote).Methods(Post)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusCreated
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := `{"Id": 3}`
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
 	}
 }

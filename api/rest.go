@@ -97,7 +97,7 @@ func searchTopics(w http.ResponseWriter, r *http.Request) {
 			fail(w, err)
 			return
 		}
-		jsonTopics = append(jsonTopics, string(jsonTopic)) 
+		jsonTopics = append(jsonTopics, string(jsonTopic))
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonTopics, ","))))
@@ -117,6 +117,12 @@ func getTopic(w http.ResponseWriter, r *http.Request) {
 	topic, err := database.GetTopic(id)
 	if err != nil {
 		fail(w, err)
+		return
+	}
+	defaultTopic := db.Topic{}
+	if topic == defaultTopic {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(""))
 		return
 	}
 	jsonTopic, err := json.Marshal(topic)
@@ -272,6 +278,12 @@ func getAuthor(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
+	defaultAuthor := db.Author{}
+	if author == defaultAuthor {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(""))
+		return
+	}
 	jsonAuthor, err := json.Marshal(author)
 	if err != nil {
 		fail(w, err)
@@ -425,6 +437,12 @@ func getLanguage(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
+	defaultLanguage := db.Language{}
+	if language == defaultLanguage {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(""))
+		return
+	}
 	jsonLanguage, err := json.Marshal(language)
 	if err != nil {
 		fail(w, err)
@@ -576,6 +594,12 @@ func getBook(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
+	defaultBook := db.Book{}
+	if book == defaultBook {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(""))
+		return
+	}
 	jsonBook, err := json.Marshal(book)
 	if err != nil {
 		fail(w, err)
@@ -629,10 +653,15 @@ func postBook(w http.ResponseWriter, r *http.Request) {
 	book := database.NewBook(author, topic, language)
 	book.Title = r.PostFormValue("Title")
 	book.ISBN.Scan(r.PostFormValue("ISBN"))
-	book.ReleaseDate, err = time.Parse(time.ANSIC, r.PostFormValue("ReleaseDate"))
-	if err != nil {
-		fail(w, err)
-		return
+	releaseDate := r.PostFormValue("ReleaseDate")
+	if releaseDate != "" {
+		book.ReleaseDate, err = time.Parse(time.ANSIC, r.PostFormValue("ReleaseDate"))
+		if err != nil {
+			fail(w, err)
+			return
+		}
+	} else {
+		book.ReleaseDate = time.Now()
 	}
 	id, err := book.Commit()
 	if err != nil {
@@ -709,6 +738,12 @@ func getQuote(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
+	defaultQuote := db.Quote{}
+	if quote == defaultQuote {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(""))
+		return
+	}
 	jsonQuote, err := json.Marshal(quote)
 	if err != nil {
 		fail(w, err)
@@ -729,18 +764,28 @@ func postQuote(w http.ResponseWriter, r *http.Request) {
 	book := database.NewBook(author, topic, language)
 	book.Title = r.PostFormValue("Title")
 	book.ISBN.Scan(r.PostFormValue("ISBN"))
-	book.ReleaseDate, err = time.Parse(time.ANSIC, r.PostFormValue("ReleaseDate"))
-	if err != nil {
-		fail(w, err)
-		return
+	releaseDate := r.PostFormValue("ReleaseDate")
+	if releaseDate != "" {
+		book.ReleaseDate, err = time.Parse(time.ANSIC, r.PostFormValue("ReleaseDate"))
+		if err != nil {
+			fail(w, err)
+			return
+		}
+	} else {
+		book.ReleaseDate = time.Now()
 	}
 	quote := database.NewQuote(book)
 	quote.Quote = r.PostFormValue("Quote")
 	quote.RecordDate = time.Now()
-	quote.Page, err = strconv.Atoi(r.PostFormValue("Page"))
-	if err != nil {
-		fail(w, err)
-		return
+	page := r.PostFormValue("Page")
+	if page != "" {
+		quote.Page, err = strconv.Atoi(r.PostFormValue("Page"))
+		if err != nil {
+			fail(w, err)
+			return
+		}
+	} else {
+		quote.Page = 0
 	}
 	id, err := book.Commit()
 	if err != nil {
