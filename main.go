@@ -28,7 +28,7 @@ func main() {
 		log.Fatal(err)
 	}
 	config := mail.Config{}
-	err = json.Unmarshal([]byte(configJson), &config)
+	err = json.Unmarshal(configJson, &config)
 	if err != nil {
 		log.Fatal(err)
 	}
