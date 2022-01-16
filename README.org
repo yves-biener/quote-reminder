@@ -12,33 +12,6 @@ quotes I highlight. It stores the quotes in a database and can send reminder
 be choosen at random or by defined rules, like they are all from one topic or
 all from different topics.
 
-* Where do the quotes come from?
-
-Depending on the source of the quotes there are different ways to add quotes to
-the database. The goal should be to combine the appending of quotes into a
-single universal process regardless of the source of the quote.
-
-** Kindle
-
-Kindle notes can be uploaded by using the export notes functionality of the
-kindle-device. There seems to be no way to do this on the online version. Also
-following questions remain unclear:
-+ What about books that I didn't bought via amazon (e.g. downloaded via
-  Humble-bundle, etc.)?
-+ Will all quotes be exported even if they were not all done on one device (e.g.
-  tablet, pc and kindle)?
-+ Does this also apply to non-amazon books (synching across multiple devices)?
-
-** Printed Books
-
-Quotes from printed books can also be stored. They need to be added individually
-or batched in a table form (e.g. as cv file, etc.) which then can be uploaded.
-
-** Non-Kindle format Books
-
-I also have Books that are not in the kindle-format (.mobi). For these books use
-a similar approach as for [[Printed Books]].
-
 * What does the database store?
 
 The database stores various information along the quote itself. The database
@@ -73,11 +46,25 @@ should be a relational database. It stores three tables for ~Quote~'s, ~Book~'s,
   + ID (PK auto-increment)
   + Language (not null, unique)
 
-* Interacting with the service
+* Provided services
 
-This service implements a RESTful interface to allow to add quotes, get the
-stored quotes, order, filter them to the user's request. This project does not
-implement a front-end representation. Using the http operations like =GET=,
-=POST=, =PUT=, =UPDATE= the changes to the database will be applied or results
-from the database will be returned.
+This application provides two services, which work independenly from each other,
+but both use the same underlying database. The first service provides an RESTful
+api to view and modify the contents of the database, while the second service
+automatically sends the actual reminders for the quotes per mail.
+
+** REST Api
+
+The basic api provides functionalities for getting, posting and deleting quotes.
+To see the available api endpoints, lauch the main.go application and visit the
+root page. On a local machine this would be `http://localhost/`
+
+** Mail reminder
+
+The reminding part of this project is achieved by sending mails in a regular
+interval per mail. All the required information, like where to send the mail,
+from which mail provider, in which time interval, how many quotes, if they
+should be related to a certain topic, if they should not repeat, etc. is all
+user configurable. To see an example of the possible configurations see
+~config_test.json~.
 
