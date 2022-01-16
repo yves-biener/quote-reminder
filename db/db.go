@@ -71,15 +71,15 @@ func (book Book) Commit() (id int, err error) {
 	if book.Id == 0 { // Insert
 		book.Author.Id, err = book.Author.Commit()
 		if err != nil {
-			return
+			return -1, err
 		}
 		book.Topic.Id, err = book.Topic.Commit()
 		if err != nil {
-			return
+			return -1, err
 		}
 		book.Language.Id, err = book.Language.Commit()
 		if err != nil {
-			return
+			return -1, err
 		}
 		res, err := book.stmt.Exec(book.Author.Id, book.Topic.Id,
 			book.Title, book.ISBN, book.Language.Id, book.ReleaseDate)

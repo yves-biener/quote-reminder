@@ -32,6 +32,29 @@ func initDatabase(t *testing.T) {
 	io.Copy(destination, source)
 }
 
+func TestDatabaseCreation(t *testing.T) {
+	// Arrange
+	err := os.Remove(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Act
+	database, err := Connect(testDatabase)
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	topics, err := database.GetTopics()
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedLen := 0
+	if actualLen := len(topics); actualLen != expectedLen {
+		t.Errorf(lenError, expectedLen, actualLen)
+	}
+}
+
 func TestGetTopics(t *testing.T) {
 	// Arrange
 	initDatabase(t)
@@ -150,6 +173,31 @@ func TestGetExistingTopic(t *testing.T) {
 	actualTopic := topic.Topic
 	if actualTopic != expectedTopic {
 		t.Fatalf(contentError, expectedTopic, actualTopic)
+	}
+}
+
+func TestUpdateTopic(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	expectedId := 1
+	topic, err := database.GetTopic(expectedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	topic.Topic = "Update Topic"
+	// Act
+	actualId, err := topic.Commit()
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	if actualId != expectedId {
+		t.Errorf(idError, expectedId, actualId)
 	}
 }
 
@@ -499,6 +547,31 @@ func TestGetExistingAuthor(t *testing.T) {
 	}
 }
 
+func TestUpdateAuthor(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	expectedId := 1
+	author, err := database.GetAuthor(expectedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	author.Name = "Update Author"
+	// Act
+	actualId, err := author.Commit()
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	if actualId != expectedId {
+		t.Errorf(idError, expectedId, actualId)
+	}
+}
+
 func TestRelatedBooksOfNonExistingAuthor(t *testing.T) {
 	// Arrange
 	initDatabase(t)
@@ -842,6 +915,31 @@ func TestGetExistingLanguage(t *testing.T) {
 	actualLanguage := language.Language
 	if actualLanguage != expectedLanguage {
 		t.Fatalf(contentError, expectedLanguage, actualLanguage)
+	}
+}
+
+func TestUpdateLanguage(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	expectedId := 1
+	language, err := database.GetLanguage(expectedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	language.Language = "Update Language"
+	// Act
+	actualId, err := language.Commit()
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	if actualId != expectedId {
+		t.Errorf(idError, expectedId, actualId)
 	}
 }
 
@@ -1212,6 +1310,31 @@ func TestGetExistingBook(t *testing.T) {
 	}
 }
 
+func TestUpdateBook(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	expectedId := 1
+	book, err := database.GetBook(expectedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	book.Title = "Update Book"
+	// Act
+	actualId, err := book.Commit()
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	if actualId != expectedId {
+		t.Errorf(idError, expectedId, actualId)
+	}
+}
+
 func TestRelatedQuotesOfNonExistingBook(t *testing.T) {
 	// Arrange
 	initDatabase(t)
@@ -1522,6 +1645,31 @@ func TestGetExistingQuote(t *testing.T) {
 	actualQuote := quote.Quote
 	if actualQuote != expectedQuote {
 		t.Fatalf(contentError, expectedQuote, actualQuote)
+	}
+}
+
+func TestUpdateQuote(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	database, err := Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	expectedId := 1
+	quote, err := database.GetQuote(expectedId)
+	if err != nil {
+		t.Fatal(err)
+	}
+	quote.Quote = "Update Quote"
+	// Act
+	actualId, err := quote.Commit()
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	if actualId != expectedId {
+		t.Errorf(idError, expectedId, actualId)
 	}
 }
 
