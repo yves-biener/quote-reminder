@@ -492,7 +492,6 @@ func TestGetRelatedQuotesOfKnownTopicFiltered(t *testing.T) {
 	}
 }
 
-// TODO: add post form variables
 func TestPostTopic(t *testing.T) {
 	// Arrange
 	initDatabase(t)
@@ -921,7 +920,6 @@ func TestGetRelatedQuotesOfKnownAuthorFiltered(t *testing.T) {
 	}
 }
 
-// TODO: add post form variables
 func TestPostAuthor(t *testing.T) {
 	// Arrange
 	initDatabase(t)
@@ -1350,7 +1348,6 @@ func TestGetRelatedQuotesOfKnownLanguageFiltered(t *testing.T) {
 	}
 }
 
-// TODO: add post form variables
 func TestPostLanguage(t *testing.T) {
 	// Arrange
 	initDatabase(t)
@@ -1651,7 +1648,6 @@ func TestGetRelatedQuotesOfKnownBookFiltered(t *testing.T) {
 	}
 }
 
-// TODO: add post form variables
 func TestPostBook(t *testing.T) {
 	// Arrange
 	initDatabase(t)
@@ -1829,7 +1825,6 @@ func TestGetQuoteOfKnownId(t *testing.T) {
 	}
 }
 
-// TODO: add post form variables
 func TestPostQuote(t *testing.T) {
 	// Arrange
 	initDatabase(t)
