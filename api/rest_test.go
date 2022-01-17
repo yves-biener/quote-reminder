@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	db "quote/db"
 	"strings"
@@ -188,7 +189,7 @@ func TestGetTopicOfUnknownId(t *testing.T) {
 	// Act
 	routerUnderTest.ServeHTTP(responseRecord, req)
 	// Assert
-	expectedStatus := http.StatusOK
+	expectedStatus := http.StatusNotFound
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
@@ -617,7 +618,7 @@ func TestGetAuthorOfUnknownId(t *testing.T) {
 	// Act
 	routerUnderTest.ServeHTTP(responseRecord, req)
 	// Assert
-	expectedStatus := http.StatusOK
+	expectedStatus := http.StatusNotFound
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
@@ -1046,7 +1047,7 @@ func TestGetLanguageOfUnknownId(t *testing.T) {
 	// Act
 	routerUnderTest.ServeHTTP(responseRecord, req)
 	// Assert
-	expectedStatus := http.StatusOK
+	expectedStatus := http.StatusNotFound
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
@@ -1475,7 +1476,7 @@ func TestGetBookOfUnknownId(t *testing.T) {
 	// Act
 	routerUnderTest.ServeHTTP(responseRecord, req)
 	// Assert
-	expectedStatus := http.StatusOK
+	expectedStatus := http.StatusNotFound
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
@@ -1654,10 +1655,15 @@ func TestGetRelatedQuotesOfKnownBookFiltered(t *testing.T) {
 func TestPostBook(t *testing.T) {
 	// Arrange
 	initDatabase(t)
-	req, err := http.NewRequest(Post, "/", nil)
+	data := url.Values{}
+	data.Add("AuthorId", "1")
+	data.Add("TopicId", "1")
+	data.Add("LanguageId", "1")
+	req, err := http.NewRequest(Post, "/", strings.NewReader(data.Encode()))
 	if err != nil {
 		t.Fatal(err)
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	database, err = db.Connect(testDatabase)
 	if err != nil {
 		t.Fatal(err)
@@ -1776,7 +1782,7 @@ func TestGetQuoteOfUnknownId(t *testing.T) {
 	// Act
 	routerUnderTest.ServeHTTP(responseRecord, req)
 	// Assert
-	expectedStatus := http.StatusOK
+	expectedStatus := http.StatusNotFound
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
@@ -1827,10 +1833,13 @@ func TestGetQuoteOfKnownId(t *testing.T) {
 func TestPostQuote(t *testing.T) {
 	// Arrange
 	initDatabase(t)
-	req, err := http.NewRequest(Post, "/", nil)
+	data := url.Values{}
+	data.Add("BookId", "1")
+	req, err := http.NewRequest(Post, "/", strings.NewReader(data.Encode()))
 	if err != nil {
 		t.Fatal(err)
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	database, err = db.Connect(testDatabase)
 	if err != nil {
 		t.Fatal(err)

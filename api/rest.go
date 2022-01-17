@@ -121,8 +121,7 @@ func getTopic(w http.ResponseWriter, r *http.Request) {
 	}
 	defaultTopic := db.Topic{}
 	if topic == defaultTopic {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(""))
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	jsonTopic, err := json.Marshal(topic)
@@ -280,8 +279,7 @@ func getAuthor(w http.ResponseWriter, r *http.Request) {
 	}
 	defaultAuthor := db.Author{}
 	if author == defaultAuthor {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(""))
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	jsonAuthor, err := json.Marshal(author)
@@ -439,8 +437,7 @@ func getLanguage(w http.ResponseWriter, r *http.Request) {
 	}
 	defaultLanguage := db.Language{}
 	if language == defaultLanguage {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(""))
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	jsonLanguage, err := json.Marshal(language)
@@ -596,8 +593,7 @@ func getBook(w http.ResponseWriter, r *http.Request) {
 	}
 	defaultBook := db.Book{}
 	if book == defaultBook {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(""))
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	jsonBook, err := json.Marshal(book)
@@ -655,6 +651,11 @@ func postBook(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
+	defaultAuthor := db.Author{}
+	if defaultAuthor == author {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 	id = r.PostFormValue("TopicId")
 	topicId, err := strconv.Atoi(id)
 	if err != nil {
@@ -666,6 +667,11 @@ func postBook(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
+	defaultTopic := db.Topic{}
+	if defaultTopic == topic {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 	id = r.PostFormValue("LanguageId")
 	languageId, err := strconv.Atoi(id)
 	if err != nil {
@@ -675,6 +681,11 @@ func postBook(w http.ResponseWriter, r *http.Request) {
 	language, err := database.GetLanguage(languageId)
 	if err != nil {
 		fail(w, err)
+		return
+	}
+	defaultLanguage := db.Language{}
+	if defaultLanguage == language {
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	book := database.NewBook(author, topic, language)
@@ -767,8 +778,7 @@ func getQuote(w http.ResponseWriter, r *http.Request) {
 	}
 	defaultQuote := db.Quote{}
 	if quote == defaultQuote {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(""))
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	jsonQuote, err := json.Marshal(quote)
@@ -782,7 +792,8 @@ func getQuote(w http.ResponseWriter, r *http.Request) {
 
 func postQuote(w http.ResponseWriter, r *http.Request) {
 	var err error
-	bookId, err := strconv.Atoi(r.PostFormValue("BookId"))
+	id := r.PostFormValue("BookId")
+	bookId, err := strconv.Atoi(id)
 	if err != nil {
 		fail(w, err)
 		return
@@ -790,6 +801,11 @@ func postQuote(w http.ResponseWriter, r *http.Request) {
 	book, err := database.GetBook(bookId)
 	if err != nil {
 		fail(w, err)
+		return
+	}
+	defaultBook := db.Book{}
+	if book == defaultBook {
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	quote := database.NewQuote(book)
@@ -805,13 +821,13 @@ func postQuote(w http.ResponseWriter, r *http.Request) {
 	} else {
 		quote.Page = 0
 	}
-	id, err := book.Commit()
+	quoteId, err := quote.Commit()
 	if err != nil {
 		fail(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(fmt.Sprintf(`{"Id": %d}`, id)))
+	w.Write([]byte(fmt.Sprintf(`{"Id": %d}`, quoteId)))
 }
 
 func jsonContentWrapper(h http.Handler) http.Handler {
