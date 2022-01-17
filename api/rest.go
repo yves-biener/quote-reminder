@@ -644,18 +644,45 @@ func getRelatedQuotesOfBook(w http.ResponseWriter, r *http.Request) {
 
 func postBook(w http.ResponseWriter, r *http.Request) {
 	var err error
-	author := database.NewAuthor()
-	author.Name = r.PostFormValue("Name")
-	topic := database.NewTopic()
-	topic.Topic = r.PostFormValue("Topic")
-	language := database.NewLanguage()
-	language.Language = r.PostFormValue("Language")
+	id := r.PostFormValue("AuthorId")
+	authorId, err := strconv.Atoi(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	author, err := database.GetAuthor(authorId)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	id = r.PostFormValue("TopicId")
+	topicId, err := strconv.Atoi(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	topic, err := database.GetTopic(topicId)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	id = r.PostFormValue("LanguageId")
+	languageId, err := strconv.Atoi(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	language, err := database.GetLanguage(languageId)
+	if err != nil {
+		fail(w, err)
+		return
+	}
 	book := database.NewBook(author, topic, language)
 	book.Title = r.PostFormValue("Title")
 	book.ISBN.Scan(r.PostFormValue("ISBN"))
 	releaseDate := r.PostFormValue("ReleaseDate")
 	if releaseDate != "" {
-		book.ReleaseDate, err = time.Parse(time.ANSIC, r.PostFormValue("ReleaseDate"))
+		book.ReleaseDate, err = time.Parse(time.ANSIC, releaseDate)
 		if err != nil {
 			fail(w, err)
 			return
@@ -663,13 +690,13 @@ func postBook(w http.ResponseWriter, r *http.Request) {
 	} else {
 		book.ReleaseDate = time.Now()
 	}
-	id, err := book.Commit()
+	bookId, err := book.Commit()
 	if err != nil {
 		fail(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(fmt.Sprintf(`{"Id": %d}`, id)))
+	w.Write([]byte(fmt.Sprintf(`{"Id": %d}`, bookId)))
 }
 
 func getQuotes(w http.ResponseWriter, r *http.Request) {
@@ -755,31 +782,22 @@ func getQuote(w http.ResponseWriter, r *http.Request) {
 
 func postQuote(w http.ResponseWriter, r *http.Request) {
 	var err error
-	author := database.NewAuthor()
-	author.Name = r.PostFormValue("Name")
-	topic := database.NewTopic()
-	topic.Topic = r.PostFormValue("Topic")
-	language := database.NewLanguage()
-	language.Language = r.PostFormValue("Language")
-	book := database.NewBook(author, topic, language)
-	book.Title = r.PostFormValue("Title")
-	book.ISBN.Scan(r.PostFormValue("ISBN"))
-	releaseDate := r.PostFormValue("ReleaseDate")
-	if releaseDate != "" {
-		book.ReleaseDate, err = time.Parse(time.ANSIC, r.PostFormValue("ReleaseDate"))
-		if err != nil {
-			fail(w, err)
-			return
-		}
-	} else {
-		book.ReleaseDate = time.Now()
+	bookId, err := strconv.Atoi(r.PostFormValue("BookId"))
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	book, err := database.GetBook(bookId)
+	if err != nil {
+		fail(w, err)
+		return
 	}
 	quote := database.NewQuote(book)
 	quote.Quote = r.PostFormValue("Quote")
 	quote.RecordDate = time.Now()
 	page := r.PostFormValue("Page")
 	if page != "" {
-		quote.Page, err = strconv.Atoi(r.PostFormValue("Page"))
+		quote.Page, err = strconv.Atoi(page)
 		if err != nil {
 			fail(w, err)
 			return
