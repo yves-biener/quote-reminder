@@ -211,6 +211,33 @@ func postTopic(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`{"Id": %d}`, id)))
 }
 
+func patchTopic(w http.ResponseWriter, r *http.Request) {
+	id := r.PostFormValue("Id")
+	topicId, err := strconv.Atoi(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	topic, err := database.GetTopic(topicId)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	defaultTopic := db.Topic{}
+	if defaultTopic == topic {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	topic.Topic = r.PostFormValue("Topic")
+	_, err = topic.Commit()
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`{"Id": %d}`, topicId)))
+}
+
 func getAuthors(w http.ResponseWriter, r *http.Request) {
 	authors, err := database.GetAuthors()
 	if err != nil {
@@ -369,6 +396,33 @@ func postAuthor(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`{"Id": %d}`, id)))
 }
 
+func patchAuthor(w http.ResponseWriter, r *http.Request) {
+	id := r.PostFormValue("Id")
+	authorId, err := strconv.Atoi(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	author, err := database.GetAuthor(authorId)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	defaultAuthor := db.Author{}
+	if defaultAuthor == author {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	author.Name = r.PostFormValue("Name")
+	_, err = author.Commit()
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`{"Id": %d}`, authorId)))
+}
+
 func getLanguages(w http.ResponseWriter, r *http.Request) {
 	languages, err := database.GetLanguages()
 	if err != nil {
@@ -525,6 +579,33 @@ func postLanguage(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(fmt.Sprintf(`{"Id": %d}`, id)))
+}
+
+func patchLanguage(w http.ResponseWriter, r *http.Request) {
+	id := r.PostFormValue("Id")
+	languageId, err := strconv.Atoi(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	language, err := database.GetLanguage(languageId)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	defaultLanguage := db.Language{}
+	if defaultLanguage == language {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	language.Language = r.PostFormValue("Language")
+	_, err = language.Commit()
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`{"Id": %d}`, languageId)))
 }
 
 func getBooks(w http.ResponseWriter, r *http.Request) {
@@ -710,6 +791,45 @@ func postBook(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`{"Id": %d}`, bookId)))
 }
 
+func patchBook(w http.ResponseWriter, r *http.Request) {
+	id := r.PostFormValue("Id")
+	bookId, err := strconv.Atoi(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	book, err := database.GetBook(bookId)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	defaultBook := db.Book{}
+	if defaultBook == book {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	if title := r.PostFormValue("Title"); title != "" {
+		book.Title = title
+	}
+	if isbn := r.PostFormValue("ISBN"); isbn != "" {
+		book.ISBN.String = isbn
+	}
+	if releaseDate := r.PostFormValue("ReleaseDate"); releaseDate != "" {
+		book.ReleaseDate, err = time.Parse(time.ANSIC, releaseDate)
+		if err != nil {
+			fail(w, err)
+			return
+		}
+	}
+	_, err = book.Commit()
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`{"Id": %d}`, bookId)))
+}
+
 func getQuotes(w http.ResponseWriter, r *http.Request) {
 	quotes, err := database.GetQuotes()
 	if err != nil {
@@ -830,6 +950,42 @@ func postQuote(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`{"Id": %d}`, quoteId)))
 }
 
+func patchQuote(w http.ResponseWriter, r *http.Request) {
+	id := r.PostFormValue("Id")
+	quoteId, err := strconv.Atoi(id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	quote, err := database.GetQuote(quoteId)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	defaultQuote := db.Quote{}
+	if defaultQuote == quote {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	if text := r.PostFormValue("Quote"); text != "" {
+		quote.Quote = text
+	}
+	if page := r.PostFormValue("Page"); page != "" {
+		quote.Page, err = strconv.Atoi(page)
+		if err != nil {
+			fail(w, err)
+			return
+		}
+	}
+	_, err = quote.Commit()
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`{"Id": %d}`, quoteId)))
+}
+
 func jsonContentWrapper(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
@@ -851,7 +1007,7 @@ func RunServer(db *db.Database) {
 const (
 	Get    = "GET"    // -> database select
 	Post   = "POST"   // -> database insert
-	Patch  = "PATCH"  // -> database update
+	Patch  = "PATCH"  // -> database patch
 	Delete = "DELETE" // -> database drop
 )
 
@@ -901,6 +1057,11 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 		Path("").
 		HandlerFunc(postTopic).
 		Methods(Post)
+	// Patch Methods
+	topicsRouter.
+		Path("").
+		HandlerFunc(patchTopic).
+		Methods(Patch)
 
 	authorsRouter := root.PathPrefix("/authors").Subrouter()
 	// Get Methods
@@ -940,6 +1101,11 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 		Path("").
 		HandlerFunc(postAuthor).
 		Methods(Post)
+	// Patch Methods
+	authorsRouter.
+		Path("").
+		HandlerFunc(patchAuthor).
+		Methods(Patch)
 
 	languagesRouter := root.PathPrefix("/languages").Subrouter()
 	// Get Methods
@@ -971,6 +1137,11 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 		Path("").
 		HandlerFunc(postLanguage).
 		Methods(Post)
+	// Patch Methods
+	languagesRouter.
+		Path("").
+		HandlerFunc(patchLanguage).
+		Methods(Patch)
 
 	booksRouter := root.PathPrefix("/books").Subrouter()
 	// Get Methods
@@ -1001,6 +1172,11 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 		Path("").
 		HandlerFunc(postBook).
 		Methods(Post)
+	// Patch Methods
+	booksRouter.
+		Path("").
+		HandlerFunc(patchBook).
+		Methods(Patch)
 
 	quotesRouter := root.PathPrefix("/quotes").Subrouter()
 	// Get Methods
@@ -1022,5 +1198,10 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 		Path("").
 		HandlerFunc(postQuote).
 		Methods(Post)
+	// Patch Methods
+	quotesRouter.
+		Path("").
+		HandlerFunc(patchQuote).
+		Methods(Patch)
 	return
 }

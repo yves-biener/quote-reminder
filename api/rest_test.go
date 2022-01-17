@@ -520,6 +520,70 @@ func TestPostTopic(t *testing.T) {
 	}
 }
 
+func TestPatchUnknownTopic(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	data := url.Values{}
+	data.Add("Id", "69")
+	req, err := http.NewRequest(Patch, "/", strings.NewReader(data.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", patchTopic).Methods(Patch)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusNotFound
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := ""
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestPatchKnownTopic(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	data := url.Values{}
+	expectedId := 1
+	data.Add("Id", fmt.Sprintf("%d", expectedId))
+	data.Add("Topic", "Patched Topic")
+	req, err := http.NewRequest(Patch, "/", strings.NewReader(data.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", patchTopic).Methods(Patch)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := fmt.Sprintf(`{"Id": %d}`, expectedId)
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
 func TestGetAuthors(t *testing.T) {
 	// Arrange
 	initDatabase(t)
@@ -943,6 +1007,70 @@ func TestPostAuthor(t *testing.T) {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
 	expectedBody := `{"Id": 3}`
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestPatchUnknownAuthor(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	data := url.Values{}
+	data.Add("Id", "69")
+	req, err := http.NewRequest(Patch, "/", strings.NewReader(data.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", patchAuthor).Methods(Patch)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusNotFound
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := ""
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestPatchKnownAuthor(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	data := url.Values{}
+	expectedId := 1
+	data.Add("Id", fmt.Sprintf("%d", expectedId))
+	data.Add("Name", "Patched Author")
+	req, err := http.NewRequest(Patch, "/", strings.NewReader(data.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", patchAuthor).Methods(Patch)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := fmt.Sprintf(`{"Id": %d}`, expectedId)
 	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
 	}
@@ -1376,6 +1504,70 @@ func TestPostLanguage(t *testing.T) {
 	}
 }
 
+func TestPatchUnknownLanguage(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	data := url.Values{}
+	data.Add("Id", "69")
+	req, err := http.NewRequest(Patch, "/", strings.NewReader(data.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", patchLanguage).Methods(Patch)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusNotFound
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := ""
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestPatchKnownLanguage(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	data := url.Values{}
+	expectedId := 1
+	data.Add("Id", fmt.Sprintf("%d", expectedId))
+	data.Add("Language", "Patched Language")
+	req, err := http.NewRequest(Patch, "/", strings.NewReader(data.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", patchLanguage).Methods(Patch)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := fmt.Sprintf(`{"Id": %d}`, expectedId)
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
 func TestGetBooks(t *testing.T) {
 	// Arrange
 	initDatabase(t)
@@ -1681,6 +1873,71 @@ func TestPostBook(t *testing.T) {
 	}
 }
 
+func TestPatchUnknownBook(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	data := url.Values{}
+	data.Add("Id", "69")
+	req, err := http.NewRequest(Patch, "/", strings.NewReader(data.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", patchBook).Methods(Patch)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusNotFound
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := ""
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestPatchKnownBook(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	data := url.Values{}
+	expectedId := 1
+	data.Add("Id", fmt.Sprintf("%d", expectedId))
+	data.Add("Title", "Title")
+	data.Add("ISBN", "TEST-42069-ISBN")
+	req, err := http.NewRequest(Patch, "/", strings.NewReader(data.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", patchBook).Methods(Patch)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := fmt.Sprintf(`{"Id": %d}`, expectedId)
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
 func TestGetQuotes(t *testing.T) {
 	// Arrange
 	initDatabase(t)
@@ -1851,6 +2108,71 @@ func TestPostQuote(t *testing.T) {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
 	expectedBody := `{"Id": 3}`
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestPatchUnknownQuote(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	data := url.Values{}
+	data.Add("Id", "69")
+	req, err := http.NewRequest(Patch, "/", strings.NewReader(data.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", patchQuote).Methods(Patch)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusNotFound
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := ""
+	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
+		t.Errorf(bodyError, expectedBody, actualBody)
+	}
+}
+
+func TestPatchKnownQuote(t *testing.T) {
+	// Arrange
+	initDatabase(t)
+	data := url.Values{}
+	expectedId := 1
+	data.Add("Id", fmt.Sprintf("%d", expectedId))
+	data.Add("Quote", "Patched Quote")
+	data.Add("Page", "420")
+	req, err := http.NewRequest(Patch, "/", strings.NewReader(data.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	database, err = db.Connect(testDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	responseRecord := httptest.NewRecorder()
+	routerUnderTest := mux.NewRouter()
+	routerUnderTest.HandleFunc("/", patchQuote).Methods(Patch)
+	// Act
+	routerUnderTest.ServeHTTP(responseRecord, req)
+	// Assert
+	expectedStatus := http.StatusOK
+	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
+		t.Errorf(statusError, expectedStatus, actualStatus)
+	}
+	expectedBody := fmt.Sprintf(`{"Id": %d}`, expectedId)
 	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
 	}
