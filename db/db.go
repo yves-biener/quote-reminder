@@ -7,6 +7,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// TODO: What can/should I use this interface for?
 type DAO interface {
 	// Commit changes of the DAO object to the Database, returning the
 	// associated id of the DAO or an error if Commit failed
@@ -82,7 +83,7 @@ func (book Book) Commit() (id int, err error) {
 			return -1, err
 		}
 		res, err := book.stmt.Exec(book.Author.Id, book.Topic.Id,
-			book.Title, book.ISBN, book.Language.Id, book.ReleaseDate)
+			book.ISBN, book.Title, book.Language.Id, book.ReleaseDate)
 		if err != nil {
 			return -1, err
 		}
@@ -91,7 +92,7 @@ func (book Book) Commit() (id int, err error) {
 		err = e
 	} else { // Update
 		_, err = book.stmt.Exec(book.Author.Id, book.Topic.Id,
-			book.Title, book.ISBN, book.Language.Id, book.ReleaseDate, book.Id)
+			book.ISBN, book.Title, book.Language.Id, book.ReleaseDate, book.Id)
 		id = book.Id
 	}
 	return
