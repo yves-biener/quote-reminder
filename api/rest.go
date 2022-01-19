@@ -3,7 +3,6 @@ package quote
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	db "quote/db"
 	"strconv"
@@ -990,16 +989,6 @@ func jsonContentWrapper(h http.Handler) http.Handler {
 		w.Header().Set("Content-type", "application/json")
 		h.ServeHTTP(w, r)
 	})
-}
-
-func RunServer(db *db.Database) {
-	server := &http.Server{
-		Handler:      GetRouter(db),
-		Addr:         "127.0.0.1:8000",
-		WriteTimeout: 10 * time.Second,
-		ReadTimeout:  10 * time.Second,
-	}
-	log.Fatal(server.ListenAndServe())
 }
 
 // HTTP Methods
