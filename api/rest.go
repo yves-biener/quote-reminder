@@ -14,12 +14,11 @@ import (
 )
 
 var database *db.Database
+var helpMessage string
 
 func help(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	// TODO: create help message for all the available functions maybe this
-	// can be automated?
-	w.Write([]byte(`{"message": "not found"}`))
+	w.Write([]byte(helpMessage))
 }
 
 func fail(w http.ResponseWriter, err error) {
@@ -1203,5 +1202,20 @@ func GetRouter(db *db.Database) (router *mux.Router) {
 		Path("").
 		HandlerFunc(patchQuote).
 		Methods(Patch)
+
+	// Create help message by walking the available routes
+	helpMessage = fmt.Sprintf("Following routes are available:\n")
+	router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		templatePath, err := route.GetPathTemplate()
+		if err != nil {
+			return nil
+		}
+		method, err := route.GetMethods()
+		if err != nil {
+			return nil
+		}
+		helpMessage += fmt.Sprintf("%v: %v\n", method, templatePath)
+		return nil
+	})
 	return
 }
