@@ -109,8 +109,7 @@ func getTopic(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	defaultTopic := db.Topic{}
-	if topic == defaultTopic {
+	if topic == db.DefaultTopic {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -213,8 +212,7 @@ func patchTopic(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	defaultTopic := db.Topic{}
-	if defaultTopic == topic {
+	if db.DefaultTopic == topic {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -294,8 +292,7 @@ func getAuthor(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	defaultAuthor := db.Author{}
-	if author == defaultAuthor {
+	if author == db.DefaultAuthor {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -398,8 +395,7 @@ func patchAuthor(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	defaultAuthor := db.Author{}
-	if defaultAuthor == author {
+	if db.DefaultAuthor == author {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -479,8 +475,7 @@ func getLanguage(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	defaultLanguage := db.Language{}
-	if language == defaultLanguage {
+	if language == db.DefaultLanguage {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -583,8 +578,7 @@ func patchLanguage(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	defaultLanguage := db.Language{}
-	if defaultLanguage == language {
+	if db.DefaultLanguage == language {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -662,8 +656,7 @@ func getBook(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	defaultBook := db.Book{}
-	if book == defaultBook {
+	if book == db.DefaultBook {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -722,8 +715,7 @@ func postBook(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	defaultAuthor := db.Author{}
-	if defaultAuthor == author {
+	if db.DefaultAuthor == author {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -738,8 +730,7 @@ func postBook(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	defaultTopic := db.Topic{}
-	if defaultTopic == topic {
+	if db.DefaultTopic == topic {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -754,8 +745,7 @@ func postBook(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	defaultLanguage := db.Language{}
-	if defaultLanguage == language {
+	if db.DefaultLanguage == language {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -793,8 +783,7 @@ func patchBook(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	defaultBook := db.Book{}
-	if defaultBook == book {
+	if db.DefaultBook == book {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -886,8 +875,7 @@ func getQuote(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	defaultQuote := db.Quote{}
-	if quote == defaultQuote {
+	if quote == db.DefaultQuote {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -913,8 +901,7 @@ func postQuote(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	defaultBook := db.Book{}
-	if book == defaultBook {
+	if book == db.DefaultBook {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -952,8 +939,7 @@ func patchQuote(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	defaultQuote := db.Quote{}
-	if defaultQuote == quote {
+	if db.DefaultQuote == quote {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}

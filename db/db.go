@@ -27,6 +27,8 @@ type Quote struct {
 	stmt       *sql.Stmt
 }
 
+var DefaultQuote Quote = Quote{}
+
 func (db Database) NewQuote(book Book) (quote Quote) {
 	quote.stmt = db.insertQuoteStmt
 	quote.Book = book
@@ -72,6 +74,8 @@ type Book struct {
 	ReleaseDate time.Time
 	stmt        *sql.Stmt
 }
+
+var DefaultBook Book = Book{}
 
 func (db Database) NewBook(author Author, topic Topic, language Language) (book Book) {
 	book.stmt = db.insertBookStmt
@@ -126,6 +130,8 @@ type Author struct {
 	stmt *sql.Stmt
 }
 
+var DefaultAuthor Author = Author{}
+
 func (db Database) NewAuthor() (author Author) {
 	author.stmt = db.insertAuthorStmt
 	return
@@ -162,6 +168,8 @@ type Topic struct {
 	stmt  *sql.Stmt
 }
 
+var DefaultTopic Topic = Topic{}
+
 func (db Database) NewTopic() (topic Topic) {
 	topic.stmt = db.insertTopicStmt
 	return
@@ -197,6 +205,8 @@ type Language struct {
 	Language string
 	stmt     *sql.Stmt
 }
+
+var DefaultLanguage Language = Language{}
 
 func (db Database) NewLanguage() (language Language) {
 	language.stmt = db.insertLanguageStmt

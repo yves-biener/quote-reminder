@@ -139,9 +139,8 @@ func TestGetNonExistingTopic(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defaultTopic := Topic{}
-	if topic != defaultTopic {
-		t.Fatal("Got non default topic for non existing topic Id")
+	if topic != DefaultTopic {
+		t.Fatal("Got non Default topic for non existing topic Id")
 	}
 }
 
@@ -510,9 +509,8 @@ func TestGetNonExistingAuthor(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defaultAuthor := Author{}
-	if author != defaultAuthor {
-		t.Fatal("Got non default author for non existing author Id")
+	if author != DefaultAuthor {
+		t.Fatal("Got non Default author for non existing author Id")
 	}
 }
 
@@ -881,9 +879,8 @@ func TestGetNonExistingLanguage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defaultLanguage := Language{}
-	if language != defaultLanguage {
-		t.Fatal("Got non default language for non existing language Id")
+	if language != DefaultLanguage {
+		t.Fatal("Got non Default language for non existing language Id")
 	}
 }
 
@@ -1273,9 +1270,8 @@ func TestGetNonExistingBook(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defaultBook := Book{}
-	if book != defaultBook {
-		t.Fatal("Got non default book for non existing book Id")
+	if book != DefaultBook {
+		t.Fatal("Got non Default book for non existing book Id")
 	}
 }
 
@@ -1611,9 +1607,8 @@ func TestGetNonExistingQuote(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defaultQuote := Quote{}
-	if quote != defaultQuote {
-		t.Fatal("Got non default quote for non existing quote Id")
+	if quote != DefaultQuote {
+		t.Fatal("Got non Default quote for non existing quote Id")
 	}
 }
 
