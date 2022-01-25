@@ -25,27 +25,19 @@ func fail(w http.ResponseWriter, err error) {
 	w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
 }
 
-// TODO: move filtering to db.go maybe create custom type for slice of elements
-// as this contains information about what is searched for in the search
-// functions
-func filterBooks(books []db.Book, filters []string) (filtered []db.Book) {
-	for _, filter := range filters {
-		for _, book := range books {
-			if strings.Contains(book.Title, filter) ||
-				strings.Contains(book.ISBN.String, filter) {
-				filtered = append(filtered, book)
-			}
+func filterBooks(books []db.Book, filters ...string) (res []db.Book) {
+	for _, book := range books {
+		if book.Filter(filters...) {
+			res = append(res, book)
 		}
 	}
 	return
 }
 
-func filterQuotes(quotes []db.Quote, filters []string) (filtered []db.Quote) {
-	for _, filter := range filters {
-		for _, quote := range quotes {
-			if strings.Contains(quote.Quote, filter) {
-				filtered = append(filtered, quote)
-			}
+func filterQuotes(quotes []db.Quote, filters ...string) (res []db.Quote) {
+	for _, quote := range quotes {
+		if quote.Filter(filters...) {
+			res = append(res, quote)
 		}
 	}
 	return
@@ -149,7 +141,7 @@ func getRelatedBooksOfTopic(w http.ResponseWriter, r *http.Request) {
 	}
 	if val, ok := pathParams["filter"]; ok {
 		filters := strings.Split(val, " ")
-		books = filterBooks(books, filters)
+		books = filterBooks(books, filters...)
 	}
 	var jsonBooks []string
 	for _, book := range books {
@@ -182,7 +174,7 @@ func getRelatedQuotesOfTopic(w http.ResponseWriter, r *http.Request) {
 	}
 	if val, ok := pathParams["filter"]; ok {
 		filters := strings.Split(val, " ")
-		quotes = filterQuotes(quotes, filters)
+		quotes = filterQuotes(quotes, filters...)
 	}
 	var jsonQuotes []string
 	for _, quote := range quotes {
@@ -334,7 +326,7 @@ func getRelatedBooksOfAuthor(w http.ResponseWriter, r *http.Request) {
 	}
 	if val, ok := pathParams["filter"]; ok {
 		filters := strings.Split(val, " ")
-		books = filterBooks(books, filters)
+		books = filterBooks(books, filters...)
 	}
 	var jsonBooks []string
 	for _, book := range books {
@@ -367,7 +359,7 @@ func getRelatedQuotesOfAuthor(w http.ResponseWriter, r *http.Request) {
 	}
 	if val, ok := pathParams["filter"]; ok {
 		filters := strings.Split(val, " ")
-		quotes = filterQuotes(quotes, filters)
+		quotes = filterQuotes(quotes, filters...)
 	}
 	var jsonQuotes []string
 	for _, quote := range quotes {
@@ -519,7 +511,7 @@ func getRelatedBooksOfLanguage(w http.ResponseWriter, r *http.Request) {
 	}
 	if val, ok := pathParams["filter"]; ok {
 		filters := strings.Split(val, " ")
-		books = filterBooks(books, filters)
+		books = filterBooks(books, filters...)
 	}
 	var jsonBooks []string
 	for _, book := range books {
@@ -552,7 +544,7 @@ func getRelatedQuotesOfLanguage(w http.ResponseWriter, r *http.Request) {
 	}
 	if val, ok := pathParams["filter"]; ok {
 		filters := strings.Split(val, " ")
-		quotes = filterQuotes(quotes, filters)
+		quotes = filterQuotes(quotes, filters...)
 	}
 	var jsonQuotes []string
 	for _, quote := range quotes {
@@ -702,7 +694,7 @@ func getRelatedQuotesOfBook(w http.ResponseWriter, r *http.Request) {
 	}
 	if val, ok := pathParams["filter"]; ok {
 		filters := strings.Split(val, " ")
-		quotes = filterQuotes(quotes, filters)
+		quotes = filterQuotes(quotes, filters...)
 	}
 	var jsonQuotes []string
 	for _, quote := range quotes {

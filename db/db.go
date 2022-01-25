@@ -2,6 +2,7 @@ package quote
 
 import (
 	"database/sql"
+	"strings"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -12,6 +13,9 @@ type DAO interface {
 	// Commit changes of the DAO object to the Database, returning the
 	// associated id of the DAO or an error if Commit failed
 	Commit() (int, error)
+	// Filter checks if the given filters strings match to the current dao.
+	// Returns a true if it matches the provided filters otherwise false
+	Filter(filters ...string) bool
 }
 
 type Quote struct {
@@ -47,6 +51,15 @@ func (quote Quote) Commit() (id int, err error) {
 		id = quote.Id
 	}
 	return
+}
+
+func (quote Quote) Filter(filters ...string) bool {
+	for _, filter := range filters {
+		if strings.Contains(quote.Quote, filter) {
+			return true
+		}
+	}
+	return false
 }
 
 type Book struct {
@@ -98,6 +111,15 @@ func (book Book) Commit() (id int, err error) {
 	return
 }
 
+func (book Book) Filter(filters ...string) bool {
+	for _, filter := range filters {
+		if strings.Contains(book.Title, filter) || strings.Contains(book.ISBN.String, filter) {
+			return true
+		}
+	}
+	return false
+}
+
 type Author struct {
 	Id   int
 	Name string
@@ -109,7 +131,7 @@ func (db Database) NewAuthor() (author Author) {
 	return
 }
 
-func (author *Author) Commit() (id int, err error) {
+func (author Author) Commit() (id int, err error) {
 	if author.Id == 0 { // Insert
 		res, err := author.stmt.Exec(author.Name)
 		if err != nil {
@@ -123,6 +145,15 @@ func (author *Author) Commit() (id int, err error) {
 		id = author.Id
 	}
 	return
+}
+
+func (author Author) Filter(filters ...string) bool {
+	for _, filter := range filters {
+		if strings.Contains(author.Name, filter) {
+			return true
+		}
+	}
+	return false
 }
 
 type Topic struct {
@@ -152,6 +183,15 @@ func (topic Topic) Commit() (id int, err error) {
 	return
 }
 
+func (topic Topic) Filter(filters ...string) bool {
+	for _, filter := range filters {
+		if strings.Contains(topic.Topic, filter) {
+			return true
+		}
+	}
+	return false
+}
+
 type Language struct {
 	Id       int
 	Language string
@@ -177,6 +217,15 @@ func (language Language) Commit() (id int, err error) {
 		id = language.Id
 	}
 	return
+}
+
+func (language Language) Filter(filters ...string) bool {
+	for _, filter := range filters {
+		if strings.Contains(language.Language, filter) {
+			return true
+		}
+	}
+	return false
 }
 
 type Database struct {
