@@ -49,17 +49,13 @@ func getTopics(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	var jsonTopics []string
-	for _, topic := range topics {
-		jsonTopic, err := json.Marshal(topic)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		jsonTopics = append(jsonTopics, string(jsonTopic))
+	response, err := json.Marshal(topics)
+	if err != nil {
+		fail(w, err)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonTopics, ","))))
+	w.Write(response)
 }
 
 func searchTopics(w http.ResponseWriter, r *http.Request) {
@@ -80,17 +76,12 @@ func searchTopics(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	var jsonTopics []string
-	for _, topic := range topics {
-		jsonTopic, err := json.Marshal(topic)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		jsonTopics = append(jsonTopics, string(jsonTopic))
+	response, err := json.Marshal(topics)
+	if err != nil {
+		fail(w, err)
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonTopics, ","))))
+	w.Write(response)
 }
 
 func getTopic(w http.ResponseWriter, r *http.Request) {
@@ -113,13 +104,13 @@ func getTopic(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	jsonTopic, err := json.Marshal(topic)
+	response, err := json.Marshal(topic)
 	if err != nil {
 		fail(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`%s`, string(jsonTopic))))
+	w.Write(response)
 }
 
 func getRelatedBooksOfTopic(w http.ResponseWriter, r *http.Request) {
@@ -142,17 +133,9 @@ func getRelatedBooksOfTopic(w http.ResponseWriter, r *http.Request) {
 		filters := strings.Split(val, " ")
 		books = filterBooks(books, filters...)
 	}
-	var jsonBooks []string
-	for _, book := range books {
-		jsonBook, err := json.Marshal(book)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		jsonBooks = append(jsonBooks, string(jsonBook))
-	}
+	response, err := json.Marshal(books)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonBooks, ","))))
+	w.Write(response)
 }
 
 func getRelatedQuotesOfTopic(w http.ResponseWriter, r *http.Request) {
@@ -175,17 +158,13 @@ func getRelatedQuotesOfTopic(w http.ResponseWriter, r *http.Request) {
 		filters := strings.Split(val, " ")
 		quotes = filterQuotes(quotes, filters...)
 	}
-	var jsonQuotes []string
-	for _, quote := range quotes {
-		jsonQuote, err := json.Marshal(quote)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		jsonQuotes = append(jsonQuotes, string(jsonQuote))
+	response, err := json.Marshal(quotes)
+	if err != nil {
+		fail(w, err)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonQuotes, ","))))
+	w.Write(response)
 }
 
 func postTopic(w http.ResponseWriter, r *http.Request) {
@@ -232,17 +211,13 @@ func getAuthors(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	var jsonAuthors []string
-	for _, author := range authors {
-		jsonAuthor, err := json.Marshal(author)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		jsonAuthors = append(jsonAuthors, string(jsonAuthor))
+	response, err := json.Marshal(authors)
+	if err != nil {
+		fail(w, err)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonAuthors, ","))))
+	w.Write(response)
 }
 
 func searchAuthors(w http.ResponseWriter, r *http.Request) {
@@ -263,17 +238,13 @@ func searchAuthors(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	var jsonAuthors []string
-	for _, author := range authors {
-		jsonAuthor, err := json.Marshal(author)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		jsonAuthors = append(jsonAuthors, string(jsonAuthor))
+	response, err := json.Marshal(authors)
+	if err != nil {
+		fail(w, err)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonAuthors, ","))))
+	w.Write(response)
 }
 
 func getAuthor(w http.ResponseWriter, r *http.Request) {
@@ -296,13 +267,13 @@ func getAuthor(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	jsonAuthor, err := json.Marshal(author)
+	response, err := json.Marshal(author)
 	if err != nil {
 		fail(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`%s`, string(jsonAuthor))))
+	w.Write(response)
 }
 
 func getRelatedBooksOfAuthor(w http.ResponseWriter, r *http.Request) {
@@ -325,17 +296,13 @@ func getRelatedBooksOfAuthor(w http.ResponseWriter, r *http.Request) {
 		filters := strings.Split(val, " ")
 		books = filterBooks(books, filters...)
 	}
-	var jsonBooks []string
-	for _, book := range books {
-		jsonBook, err := json.Marshal(book)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		jsonBooks = append(jsonBooks, string(jsonBook))
+	response, err := json.Marshal(books)
+	if err != nil {
+		fail(w, err)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonBooks, ","))))
+	w.Write(response)
 }
 
 func getRelatedQuotesOfAuthor(w http.ResponseWriter, r *http.Request) {
@@ -358,17 +325,13 @@ func getRelatedQuotesOfAuthor(w http.ResponseWriter, r *http.Request) {
 		filters := strings.Split(val, " ")
 		quotes = filterQuotes(quotes, filters...)
 	}
-	var jsonQuotes []string
-	for _, quote := range quotes {
-		jsonQuote, err := json.Marshal(quote)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		jsonQuotes = append(jsonQuotes, string(jsonQuote))
+	response, err := json.Marshal(quotes)
+	if err != nil {
+		fail(w, err)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonQuotes, ","))))
+	w.Write(response)
 }
 
 func postAuthor(w http.ResponseWriter, r *http.Request) {
@@ -415,17 +378,13 @@ func getLanguages(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	var jsonLanguages []string
-	for _, language := range languages {
-		jsonLanguage, err := json.Marshal(language)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		jsonLanguages = append(jsonLanguages, string(jsonLanguage))
+	response, err := json.Marshal(languages)
+	if err != nil {
+		fail(w, err)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonLanguages, ","))))
+	w.Write(response)
 }
 
 func searchLanguages(w http.ResponseWriter, r *http.Request) {
@@ -446,17 +405,13 @@ func searchLanguages(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	var jsonLanguages []string
-	for _, language := range languages {
-		jsonLanguage, err := json.Marshal(language)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		jsonLanguages = append(jsonLanguages, string(jsonLanguage))
+	response, err := json.Marshal(languages)
+	if err != nil {
+		fail(w, err)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonLanguages, ","))))
+	w.Write(response)
 }
 
 func getLanguage(w http.ResponseWriter, r *http.Request) {
@@ -479,13 +434,13 @@ func getLanguage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	jsonLanguage, err := json.Marshal(language)
+	response, err := json.Marshal(language)
 	if err != nil {
 		fail(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`%s`, string(jsonLanguage))))
+	w.Write(response)
 }
 
 func getRelatedBooksOfLanguage(w http.ResponseWriter, r *http.Request) {
@@ -508,17 +463,13 @@ func getRelatedBooksOfLanguage(w http.ResponseWriter, r *http.Request) {
 		filters := strings.Split(val, " ")
 		books = filterBooks(books, filters...)
 	}
-	var jsonBooks []string
-	for _, book := range books {
-		jsonBook, err := json.Marshal(book)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		jsonBooks = append(jsonBooks, string(jsonBook))
+	response, err := json.Marshal(books)
+	if err != nil {
+		fail(w, err)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonBooks, ","))))
+	w.Write(response)
 }
 
 func getRelatedQuotesOfLanguage(w http.ResponseWriter, r *http.Request) {
@@ -541,17 +492,13 @@ func getRelatedQuotesOfLanguage(w http.ResponseWriter, r *http.Request) {
 		filters := strings.Split(val, " ")
 		quotes = filterQuotes(quotes, filters...)
 	}
-	var jsonQuotes []string
-	for _, quote := range quotes {
-		jsonQuote, err := json.Marshal(quote)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		jsonQuotes = append(jsonQuotes, string(jsonQuote))
+	response, err := json.Marshal(quotes)
+	if err != nil {
+		fail(w, err)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonQuotes, ","))))
+	w.Write(response)
 }
 
 func postLanguage(w http.ResponseWriter, r *http.Request) {
@@ -598,17 +545,13 @@ func getBooks(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	var jsonBooks []string
-	for _, book := range books {
-		jsonBook, err := json.Marshal(book)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		jsonBooks = append(jsonBooks, string(jsonBook))
+	response, err := json.Marshal(books)
+	if err != nil {
+		fail(w, err)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonBooks, ","))))
+	w.Write(response)
 }
 
 func searchBooks(w http.ResponseWriter, r *http.Request) {
@@ -627,17 +570,13 @@ func searchBooks(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	var jsonBooks []string
-	for _, book := range books {
-		jsonBook, err := json.Marshal(book)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		jsonBooks = append(jsonBooks, string(jsonBook))
+	response, err := json.Marshal(books)
+	if err != nil {
+		fail(w, err)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonBooks, ","))))
+	w.Write(response)
 }
 
 func getBook(w http.ResponseWriter, r *http.Request) {
@@ -660,13 +599,13 @@ func getBook(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	jsonBook, err := json.Marshal(book)
+	response, err := json.Marshal(book)
 	if err != nil {
 		fail(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`%s`, string(jsonBook))))
+	w.Write(response)
 }
 
 func getRelatedQuotesOfBook(w http.ResponseWriter, r *http.Request) {
@@ -689,17 +628,13 @@ func getRelatedQuotesOfBook(w http.ResponseWriter, r *http.Request) {
 		filters := strings.Split(val, " ")
 		quotes = filterQuotes(quotes, filters...)
 	}
-	var jsonQuotes []string
-	for _, quote := range quotes {
-		jsonQuote, err := json.Marshal(quote)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		jsonQuotes = append(jsonQuotes, string(jsonQuote))
+	response, err := json.Marshal(quotes)
+	if err != nil {
+		fail(w, err)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonQuotes, ","))))
+	w.Write(response)
 }
 
 func postBook(w http.ResponseWriter, r *http.Request) {
@@ -815,17 +750,13 @@ func getQuotes(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	var jsonQuotes []string
-	for _, quote := range quotes {
-		jsonQuote, err := json.Marshal(quote)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		jsonQuotes = append(jsonQuotes, string(jsonQuote))
+	response, err := json.Marshal(quotes)
+	if err != nil {
+		fail(w, err)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonQuotes, ","))))
+	w.Write(response)
 }
 
 func searchQuotes(w http.ResponseWriter, r *http.Request) {
@@ -846,17 +777,13 @@ func searchQuotes(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	var jsonQuotes []string
-	for _, quote := range quotes {
-		jsonQuote, err := json.Marshal(quote)
-		if err != nil {
-			fail(w, err)
-			return
-		}
-		jsonQuotes = append(jsonQuotes, string(jsonQuote))
+	response, err := json.Marshal(quotes)
+	if err != nil {
+		fail(w, err)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`[%s]`, strings.Join(jsonQuotes, ","))))
+	w.Write(response)
 }
 
 func getQuote(w http.ResponseWriter, r *http.Request) {
@@ -879,13 +806,13 @@ func getQuote(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	jsonQuote, err := json.Marshal(quote)
+	response, err := json.Marshal(quote)
 	if err != nil {
 		fail(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`%s`, string(jsonQuote))))
+	w.Write(response)
 }
 
 func postQuote(w http.ResponseWriter, r *http.Request) {

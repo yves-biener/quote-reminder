@@ -257,7 +257,7 @@ func TestGetRelatedBooksOfUnknownTopic(t *testing.T) {
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	expectedBody := "[]"
+	expectedBody := "null"
 	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
 	}
@@ -321,7 +321,7 @@ func TestGetRelatedBooksOfUnknownTopicFiltered(t *testing.T) {
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	expectedBody := "[]"
+	expectedBody := "null"
 	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
 	}
@@ -385,7 +385,7 @@ func TestGetRelatedQuotesOfUnknownTopic(t *testing.T) {
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	expectedBody := "[]"
+	expectedBody := "null"
 	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
 	}
@@ -449,7 +449,7 @@ func TestGetRelatedQuotesOfUnknownTopicFiltered(t *testing.T) {
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	expectedBody := "[]"
+	expectedBody := "null"
 	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
 	}
@@ -749,7 +749,7 @@ func TestGetRelatedBooksOfUnknownAuthor(t *testing.T) {
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	expectedBody := "[]"
+	expectedBody := "null"
 	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
 	}
@@ -813,7 +813,7 @@ func TestGetRelatedBooksOfUnknownAuthorFiltered(t *testing.T) {
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	expectedBody := "[]"
+	expectedBody := "null"
 	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
 	}
@@ -877,7 +877,7 @@ func TestGetRelatedQuotesOfUnknownAuthor(t *testing.T) {
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	expectedBody := "[]"
+	expectedBody := "null"
 	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
 	}
@@ -941,7 +941,7 @@ func TestGetRelatedQuotesOfUnknownAuthorFiltered(t *testing.T) {
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	expectedBody := "[]"
+	expectedBody := "null"
 	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
 	}
@@ -1241,7 +1241,7 @@ func TestGetRelatedBooksOfUnknownLanguage(t *testing.T) {
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	expectedBody := "[]"
+	expectedBody := "null"
 	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
 	}
@@ -1305,7 +1305,7 @@ func TestGetRelatedBooksOfUnknownLanguageFiltered(t *testing.T) {
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	expectedBody := "[]"
+	expectedBody := "null"
 	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
 	}
@@ -1369,7 +1369,7 @@ func TestGetRelatedQuotesOfUnknownLanguage(t *testing.T) {
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	expectedBody := "[]"
+	expectedBody := "null"
 	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
 	}
@@ -1433,7 +1433,7 @@ func TestGetRelatedQuotesOfUnknownLanguageFiltered(t *testing.T) {
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	expectedBody := "[]"
+	expectedBody := "null"
 	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
 	}
@@ -1733,7 +1733,7 @@ func TestGetRelatedQuotesOfUnknownBook(t *testing.T) {
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	expectedBody := "[]"
+	expectedBody := "null"
 	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
 	}
@@ -1797,7 +1797,7 @@ func TestGetRelatedQuotesOfUnknownBookFiltered(t *testing.T) {
 	if actualStatus := responseRecord.Code; actualStatus != expectedStatus {
 		t.Errorf(statusError, expectedStatus, actualStatus)
 	}
-	expectedBody := "[]"
+	expectedBody := "null"
 	if actualBody := responseRecord.Body.String(); actualBody != expectedBody {
 		t.Errorf(bodyError, expectedBody, actualBody)
 	}
