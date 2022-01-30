@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	dbFilename           = "./test.sqlite"
+	dbFilename           = "./test_copy.sqlite"
 	configFilename       = "./config.json"
 	serverConfigFilename = "./server-config.json"
 )
@@ -73,6 +73,6 @@ func main() {
 	go MailService(database)
 	go ApiService(database)
 
-	fmt.Println("Services are running... Press any key to cancel...")
+	fmt.Println("Services are running... Press enter to cancel...")
 	fmt.Scanln()
 }
