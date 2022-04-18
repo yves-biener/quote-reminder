@@ -14,7 +14,7 @@ import (
 const (
 	testSource   = "./../test.sqlite"
 	testDatabase = "./cur_test.sqlite"
-	testConfig   = "./../config_test.json"
+	testConfig   = "./../test-config.json"
 	lenError     = "The number of elements does not match\nexpected: %d\nactual: %d\n"
 	headerError  = "Header of message does not match\nexpected: %s\nactual: %s\n"
 )

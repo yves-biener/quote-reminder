@@ -57,7 +57,8 @@ automatically sends the actual reminders for the quotes per mail.
 
 The basic api provides functionalities for getting, posting and deleting quotes.
 To see the available api endpoints, lauch the main.go application and visit the
-root page. On a local machine this would be `http://localhost/`
+root page. On a local machine this would be `http://localhost/`. The
+configuration for the server, see ~server-config.json~ for an example.
 
 ** Mail reminder
 
@@ -66,5 +67,5 @@ interval per mail. All the required information, like where to send the mail,
 from which mail provider, in which time interval, how many quotes, if they
 should be related to a certain topic, if they should not repeat, etc. is all
 user configurable. To see an example of the possible configurations see
-~config_test.json~.
-
+~test-config.json~. You will need to create an ~config.json~ file just like that
+test file in order to run the mail module correctly (see =main.go=).

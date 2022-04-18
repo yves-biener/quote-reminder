@@ -1,0 +1,7 @@
+{
+	"sender": "from@mail.com",
+	"password": "topsecret",
+	"receiver": ["to@mail.com", "to@mail.com"],
+	"smtpHost": "smtp.host.com",
+	"smtpPort": 1724
+}
